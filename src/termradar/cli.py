@@ -126,7 +126,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         type=int,
         default=None,
         metavar="SECONDS",
-        help="Refresh interval in seconds for this run only",
+        help="Refresh interval in seconds for this run only (minimum 5)",
     )
     parser.add_argument(
         "--enrichment-limit",

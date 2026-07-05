@@ -45,7 +45,7 @@ RadarSession
   → engine.scan()
   → build TerminalView (location, snapshot, errors, terminal size)
   → TerminalRenderer.render()
-  → sleep(refresh_seconds)    # default 5 s, minimum 3 s
+  → sleep(refresh_seconds)    # default 5 s, minimum 5 s
 ```
 
 `RadarSession` owns the loop and keeps the last good snapshot when a scan fails (stale mode). `TerminalRenderer` is stateless per frame.
@@ -134,7 +134,7 @@ Stored at `~/.config/termradar/config.toml` (platformdirs).
 |-----|---------|-------|
 | `location.*` | - | Set during onboarding |
 | `radar.radius_km` | 15 | 1–250 km |
-| `radar.refresh_seconds` | 5 | 3–300; values &lt; 3 upgraded on load |
+| `radar.refresh_seconds` | 5 | 5–300; values &lt; 5 upgraded on load |
 
 CLI overrides (`--location`, `--radius`, `--refresh`, `--aircraft-provider`, `--enrichment-limit`) apply to the current run only unless `--reset-location` re-saves config.
 
@@ -142,6 +142,6 @@ CLI overrides (`--location`, `--radius`, `--refresh`, `--aircraft-provider`, `--
 
 See [DATA_PROVIDERS.md](DATA_PROVIDERS.md) for full detail. Summary:
 
-- **Refresh:** 5 s default, 3 s minimum → one adsb.lol request per cycle
+- **Refresh:** 5 s default and minimum → one adsb.lol request per cycle
 - **Enrichment:** 30 ADSBDB requests/minute max, 10 nearest aircraft per scan, 12 h / 30 min cache
 - **Geocoding:** 1 Nominatim request/second, setup only

@@ -25,7 +25,7 @@ TermRadar applies conservative limits so the CLI stays polite to free public API
 | Setting | Value | Where enforced |
 |---------|-------|----------------|
 | Default refresh interval | **5 seconds** | Config default, onboarding |
-| Minimum refresh interval | **3 seconds** | `validate_refresh_seconds()` - `--refresh 1` is rejected |
+| Minimum refresh interval | **5 seconds** | `validate_refresh_seconds()` - values below 5 are rejected |
 | Maximum refresh interval | **300 seconds** | Config validation |
 | Enrichment requests | **30 / minute** (rolling) | `CachedRouteProvider` + `MinuteRateLimiter` |
 | Enrichment burst per scan | **10 aircraft** (default) | `RadarEngine.enrichment_limit` / `--enrichment-limit` |
@@ -57,7 +57,7 @@ If the enrichment rate limit is hit mid-scan, remaining lookups are skipped for 
 
 ### Legacy config
 
-Saved `refresh_seconds` below 3 (e.g. `1` from older versions) is automatically upgraded to **5** on load and written back to `config.toml`.
+Saved `refresh_seconds` below 5 (e.g. `1` or `3` from older versions) is automatically upgraded to **5** on load and written back to `config.toml`.
 
 ---
 

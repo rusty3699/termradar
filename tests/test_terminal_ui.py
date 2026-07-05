@@ -125,11 +125,11 @@ def test_footer_summary():
         aircraft=(),
     )
     text = TerminalRenderer().render_text(
-        _view(snapshot=snapshot, refresh_seconds=3, radius_km=10.0)
+        _view(snapshot=snapshot, refresh_seconds=5, radius_km=10.0)
     )
     assert "0 aircraft nearby" in text
     assert "radius 10 km" in text
-    assert "refresh 3s" in text
+    assert "refresh 5s" in text
 
 
 def test_compact_layout_for_narrow_terminal():

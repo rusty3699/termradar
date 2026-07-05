@@ -55,5 +55,7 @@ def test_invalid_zero_radius():
 def test_invalid_refresh_interval():
     with pytest.raises(ConfigError):
         validate_refresh_seconds(0)
-    with pytest.raises(ConfigError, match="at least 3 seconds"):
+    with pytest.raises(ConfigError, match="at least 5 seconds"):
+        validate_refresh_seconds(3)
+    with pytest.raises(ConfigError, match="at least 5 seconds"):
         validate_refresh_seconds(1)

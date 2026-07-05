@@ -26,7 +26,7 @@ termradar --reset-location
 termradar --version
 ```
 
-Refresh must be **≥ 3 seconds** (`termradar.core.limits.LIVE_REFRESH_MIN_SECONDS`).
+Refresh must be **≥ 5 seconds** (`termradar.core.limits.LIVE_REFRESH_MIN_SECONDS`).
 
 ## Test
 
@@ -94,7 +94,7 @@ Defined in `src/termradar/core/limits.py`:
 
 ```python
 LIVE_REFRESH_DEFAULT_SECONDS = 5
-LIVE_REFRESH_MIN_SECONDS = 3
+LIVE_REFRESH_MIN_SECONDS = 5
 ENRICHMENT_REQUESTS_PER_MINUTE = 30
 ENRICHMENT_MAX_BURST = 10
 ENRICHMENT_SUCCESS_TTL_SECONDS = 43_200   # 12 h

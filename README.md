@@ -59,7 +59,7 @@ Config: `~/.config/termradar/config.toml` (Linux).
 ```bash
 termradar --location "Baner, Pune"      # temporary location (this run only)
 termradar --radius 25                   # search radius in km
-termradar --refresh 10                  # refresh interval (min 3 s)
+termradar --refresh 10                  # refresh interval (min 5 s)
 termradar --aircraft-provider opensky   # OpenSky instead of adsb.lol
 termradar --enrichment-limit 10         # max aircraft to enrich per scan
 termradar --reset-location              # re-run setup
@@ -69,7 +69,7 @@ termradar --help
 
 | Setting | Default | Allowed |
 |---------|---------|---------|
-| Refresh | 5 s | 3-300 s |
+| Refresh | 5 s | 5-300 s |
 | Radius | 15 km | 1-250 km |
 | Aircraft source | adsb.lol | `adsblol` or `opensky` |
 | Enrichment | 10 nearest | `--enrichment-limit` |
