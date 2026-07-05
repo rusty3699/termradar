@@ -69,28 +69,6 @@ termradar --help
 
 Rate limits and provider details: [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md)
 
-## Example
-
-```text
-╭──────────────────── TERMRADAR ────────────────────╮
-│ Andheri, Mumbai                   LIVE ● 14:23:43 │
-│                                                   │
-│  RADAR                   NEARBY AIRCRAFT          │
-│       N                    CLOSEST                │
-│   ..... 1 .....            AKJ1141                │
-│  W    +     E              Akasa Air              │
-│       2                    CCU → BOM              │
-│                            2.9 km away · SSE · 3 kt│
-│                            NEARBY                 │
-│                            1  AKJ1141   2.9 km SSE│
-│                            2  IGO6382   3.2 km SSE│
-│                                                   │
-│ 2 aircraft nearby • radius 15 km • refresh 5s     │
-╰───────────────────────────────────────────────────╯
-```
-
-**Radar:** `+` your location · outer ring = search radius · inner ring = half radius · `1`-`5` = top five nearest · `✈` = others
-
 ## How it works
 
 ```text
