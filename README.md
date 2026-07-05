@@ -2,6 +2,8 @@
 
 **See what's flying above you - without leaving your terminal.**
 
+![TermRadar live demo](docs/assets/demo-quick.gif)
+
 TermRadar is a lightweight live aircraft radar for developers, programmers, and aviation enthusiasts.
 
 You're coding, you hear an aircraft overhead, or spot something from the window. Instead of opening a browser or reaching for a flight-tracking app, open a terminal and run:
@@ -10,7 +12,7 @@ You're coding, you hear an aircraft overhead, or spot something from the window.
 termradar
 ```
 
-You get a live radar centered on your location: nearby callsigns, distance, bearing, speed, altitude, and route info when available. Use it for the quick answer, then jump to [Flightradar24](https://www.flightradar24.com) or another tracker when you want deeper details.
+You get a live radar centered on your location: nearby callsigns, distance, bearing, speed, altitude, and route info when available. Use it for the quick answer, then jump to another tracker when you want deeper details.
 
 > **One radar engine. Multiple displays.**
 
@@ -71,17 +73,17 @@ Rate limits and provider details: [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.m
 
 ```text
 ╭──────────────────── TERMRADAR ────────────────────╮
-│ Dadar East, Mumbai                LIVE ● 13:18:10 │
+│ Andheri, Mumbai                   LIVE ● 14:23:43 │
 │                                                   │
 │  RADAR                   NEARBY AIRCRAFT          │
 │       N                    CLOSEST                │
-│   ..... 1 .....            AKJ128E                │
+│   ..... 1 .....            AKJ1141                │
 │  W    +     E              Akasa Air              │
-│       2                    Route unavailable    │
-│                            8.3 km away · N · 1 kt│
+│       2                    CCU → BOM              │
+│                            2.9 km away · SSE · 3 kt│
 │                            NEARBY                 │
-│                            1  AKJ128E   8.3 km  N│
-│                            2  AIC5TN   11.6 km NE│
+│                            1  AKJ1141   2.9 km SSE│
+│                            2  IGO6382   3.2 km SSE│
 │                                                   │
 │ 2 aircraft nearby • radius 15 km • refresh 5s     │
 ╰───────────────────────────────────────────────────╯

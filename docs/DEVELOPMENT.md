@@ -49,6 +49,19 @@ Key test areas:
 
 Use `TerminalRenderer.render_text()` for layout tests without brittle ANSI snapshots.
 
+## Demo recording
+
+The README demo GIF is generated with [VHS](https://github.com/charmbracelet/vhs). VHS needs `ttyd`, `ffmpeg`, and Chromium on your `PATH`.
+
+```bash
+# install VHS (see https://github.com/charmbracelet/vhs#installation)
+vhs docs/assets/demo-quick.tape
+```
+
+Source tape: `docs/assets/demo-quick.tape` → output: `docs/assets/demo-quick.gif`
+
+Edit the tape to change terminal size, typing speed, or how long the live UI stays on screen before exit.
+
 ## Lint and format
 
 ```bash
