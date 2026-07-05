@@ -24,8 +24,6 @@ The core is display-agnostic. Today: a polished terminal UI. Planned: Raspberry 
 
 ## Quick start
 
-![Install and first-run setup](https://raw.githubusercontent.com/rusty3699/termradar/main/docs/assets/demo-setup.gif)
-
 ```bash
 pip install termradar
 termradar
@@ -61,6 +59,8 @@ Config: `~/.config/termradar/config.toml` on Linux (platformdirs on macOS and Wi
 **Requirements:** Python 3.11+, network access. Works on Linux, macOS, Windows, and Raspberry Pi.
 
 ## Usage
+
+![Install and first-run setup](https://raw.githubusercontent.com/rusty3699/termradar/main/docs/assets/demo-setup.gif)
 
 ```bash
 termradar --location "Andheri, Mumbai"  # temporary location (this run only)
