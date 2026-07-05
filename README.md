@@ -2,7 +2,7 @@
 
 **See what's flying above you - without leaving your terminal.**
 
-![TermRadar live demo](https://raw.githubusercontent.com/rusty3699/termradar/main/docs/assets/demo-quick.gif)
+![TermRadar live demo](docs/assets/demo-quick.gif)
 
 TermRadar is a lightweight live aircraft radar for developers, programmers, and aviation enthusiasts.
 
@@ -57,7 +57,7 @@ Config: `~/.config/termradar/config.toml` (Linux).
 ## Usage
 
 ```bash
-termradar --location "Baner, Pune"      # temporary location (this run only)
+termradar --location "Andheri, Mumbai"  # temporary location (this run only)
 termradar --radius 25                   # search radius in km
 termradar --refresh 10                  # refresh interval (min 5 s)
 termradar --aircraft-provider opensky   # OpenSky instead of adsb.lol

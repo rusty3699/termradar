@@ -20,7 +20,7 @@ pip install -e ".[dev]"
 
 ```bash
 termradar
-termradar --location "Baner, Pune" --radius 25 --refresh 10
+termradar --location "Andheri, Mumbai" --radius 25 --refresh 10
 termradar --aircraft-provider opensky    # optional; rate-limited
 termradar --reset-location
 termradar --version
