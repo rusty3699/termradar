@@ -38,11 +38,22 @@ class AdsbDbRouteProvider(RouteLookup):
         if not callsign:
             return None
 
+        result: RouteInfo | None = None
         if hex_id:
-            path = f"/v0/aircraft/{quote(hex_id.strip().upper())}?callsign={quote(callsign)}"
-        else:
-            path = f"/v0/callsign/{quote(callsign)}"
+            aircraft_path = (
+                f"/v0/aircraft/{quote(hex_id.strip().upper())}?callsign={quote(callsign)}"
+            )
+            result = self._lookup_path(aircraft_path, callsign)
 
+        if result is None or (result.origin is None and result.destination is None):
+            callsign_path = f"/v0/callsign/{quote(callsign)}"
+            callsign_result = self._lookup_path(callsign_path, callsign)
+            if callsign_result is not None:
+                result = _merge_route_info(result, callsign_result)
+
+        return result
+
+    def _lookup_path(self, path: str, callsign: str) -> RouteInfo | None:
         try:
             response = self._request(path)
         except httpx.HTTPError:
@@ -102,6 +113,16 @@ def _parse_adsbdb_payload(payload: Any) -> RouteInfo | None:
         if owner:
             return RouteInfo(airline=owner)
     return None
+
+
+def _merge_route_info(base: RouteInfo | None, extra: RouteInfo) -> RouteInfo:
+    if base is None:
+        return extra
+    return RouteInfo(
+        origin=extra.origin or base.origin,
+        destination=extra.destination or base.destination,
+        airline=extra.airline or base.airline,
+    )
 
 
 def _parse_flightroute(flightroute: Any) -> RouteInfo | None:
