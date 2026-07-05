@@ -12,6 +12,8 @@ termradar
 
 You get a live radar centered on your location: nearby callsigns, distance, bearing, speed, altitude, and route info when available. Use it for the quick answer, then jump to [Flightradar24](https://www.flightradar24.com) or another tracker when you want deeper details.
 
+![TermRadar live demo](docs/assets/demo-quick.gif)
+
 > **One radar engine. Multiple displays.**
 
 The core is display-agnostic. Today: a polished terminal UI. Planned: Raspberry Pi fullscreen and small displays.
@@ -69,19 +71,21 @@ Rate limits and provider details: [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.m
 
 ## Example
 
+The demo above was recorded near Mumbai with [VHS](https://github.com/charmbracelet/vhs) — regenerate it from [`docs/assets/demo-quick.tape`](docs/assets/demo-quick.tape).
+
 ```text
 ╭──────────────────── TERMRADAR ────────────────────╮
-│ Dadar East, Mumbai                LIVE ● 13:18:10 │
+│ Andheri, Mumbai                   LIVE ● 14:23:43 │
 │                                                   │
 │  RADAR                   NEARBY AIRCRAFT          │
 │       N                    CLOSEST                │
-│   ..... 1 .....            AKJ128E                │
+│   ..... 1 .....            AKJ1141                │
 │  W    +     E              Akasa Air              │
-│       2                    Route unavailable    │
-│                            8.3 km away · N · 1 kt│
+│       2                    CCU → BOM              │
+│                            2.9 km away · SSE · 3 kt│
 │                            NEARBY                 │
-│                            1  AKJ128E   8.3 km  N│
-│                            2  AIC5TN   11.6 km NE│
+│                            1  AKJ1141   2.9 km SSE│
+│                            2  IGO6382   3.2 km SSE│
 │                                                   │
 │ 2 aircraft nearby • radius 15 km • refresh 5s     │
 ╰───────────────────────────────────────────────────╯
