@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-05
+
 ### Added
 
 - adsb.lol v2 as default live aircraft provider (`--aircraft-provider opensky` for OpenSky)
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Radar marker collision handling (offsets when on ring dots or overlapping)
 - Airline display shortens trailing ` Airlines` / ` Air Lines`
 - Documentation overhaul for providers, rate limits, and usage
+- README quick start includes `pip install termradar`
 - Provider User-Agent strings track package `__version__`
 
 ### Fixed
@@ -70,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Core radar engine, providers, config storage, CLI, and tests
 
-[Unreleased]: https://github.com/rusty3699/termradar/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/rusty3699/termradar/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/rusty3699/termradar/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rusty3699/termradar/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rusty3699/termradar/releases/tag/v0.1.0
