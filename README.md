@@ -38,7 +38,7 @@ termradar
 
 First run: enter a location, pick a geocoding result, set radius and refresh. Later runs reuse saved settings. Press **Ctrl+C** to exit.
 
-Config: `~/.config/termradar/config.toml` (Linux).
+Config: `~/.config/termradar/config.toml` on Linux (platformdirs on macOS and Windows — see [ARCHITECTURE.md](docs/ARCHITECTURE.md)).
 
 ## What you get
 
@@ -95,6 +95,7 @@ setup only (not each refresh):
 
 | Doc | What it covers |
 |-----|----------------|
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design, UI layout, code boundaries |
 | [DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md) | APIs, internal limits, caching |
 | [ROADMAP.md](docs/ROADMAP.md) | What's next |

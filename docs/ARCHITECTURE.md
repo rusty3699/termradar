@@ -31,7 +31,7 @@ RadarEngine.scan()
   → fetch aircraft (AdsblolAircraftProvider by default)
   → distance_km() + bearing_deg() from radar center
   → filter by radius, sort nearest-first
-  → enrich nearest N aircraft (ADSBDB, cached, rate-limited)
+  → enrich nearest N aircraft (ADSBDB with callsign fallback, cached, rate-limited)
   → infer airline from ICAO callsign prefix when still unknown
   → RadarSnapshot
 ```

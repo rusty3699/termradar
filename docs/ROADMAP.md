@@ -15,7 +15,7 @@
 
 - [x] Live terminal UI (Rich panels, radar plot, nearest-aircraft panel)
 - [x] Live refresh loop, CLI overrides, error/stale states
-- [x] PyPI-ready packaging, 97 tests, documentation
+- [x] PyPI-ready packaging, test suite, documentation
 
 ---
 

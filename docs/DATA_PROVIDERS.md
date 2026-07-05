@@ -39,7 +39,7 @@ TermRadar applies conservative internal limits so the CLI stays polite to free p
 
 ### What one refresh cycle does
 
-With defaults (5 s refresh, 10 km radius, adsb.lol + ADSBDB):
+With defaults (5 s refresh, 15 km radius, adsb.lol + ADSBDB):
 
 ```text
 every 5 seconds:
@@ -130,6 +130,8 @@ Data by the [OpenSky Network](https://opensky-network.org).
 | Auth | None |
 
 **When used:** after each aircraft fetch, for the nearest N aircraft that have callsigns (`N` = `--enrichment-limit`, default 10). Only on **cache miss**.
+
+**Lookup behaviour:** TermRadar tries the aircraft hex endpoint when a Mode S hex is known. If that returns no route, it falls back to the callsign-only endpoint and merges any partial results.
 
 **Returns when known:** airline name, origin IATA/ICAO, destination IATA/ICAO.
 

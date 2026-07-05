@@ -60,6 +60,18 @@ vhs docs/assets/demo-quick.tape
 
 Source tape: `docs/assets/demo-quick.tape` → output: `docs/assets/demo-quick.gif`
 
+The README embeds the GIF with a relative path (`docs/assets/demo-quick.gif`) so it renders on GitHub.
+
+**Before publishing to PyPI**, switch the README image to an absolute URL (PyPI cannot resolve relative paths), for example:
+
+```markdown
+![TermRadar live demo](https://raw.githubusercontent.com/rusty3699/termradar/v0.3.0/docs/assets/demo-quick.gif)
+```
+
+Use the release tag you publish. The repository must be **public** for the image to render on GitHub and PyPI.
+
+Regenerate the GIF after changing the tape, then commit the updated file.
+
 Edit the tape to change terminal size, typing speed, or how long the live UI stays on screen before exit.
 
 ## Lint and format
@@ -74,11 +86,13 @@ ruff format --check src tests
 
 ```bash
 python -m build
-pip install dist/termradar-*.whl
+pip install dist/termradar-0.3.0-py3-none-any.whl
 termradar --help
 termradar --version
 python -c "import termradar; print(termradar.__version__)"
 ```
+
+Remove older wheels from `dist/` before installing if multiple versions are present.
 
 ## Project layout
 

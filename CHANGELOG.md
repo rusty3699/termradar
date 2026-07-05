@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Right panel: **CLOSEST** detail + **NEARBY** compact list (title: NEARBY AIRCRAFT)
 - Radar marker collision handling (offsets when on ring dots or overlapping)
 - Airline display shortens trailing ` Airlines` / ` Air Lines`
-- Documentation overhaul for providers, rate limits, and usage
+- Documentation overhaul for providers, internal limits, and usage
 - README quick start includes `pip install termradar`
 - Provider User-Agent strings track package `__version__`
 
