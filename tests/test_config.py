@@ -90,10 +90,35 @@ refresh_seconds = 1
     assert reloaded.radar.refresh_seconds == 5
 
 
+def test_load_subminimum_refresh_seconds_is_upgraded(tmp_path: Path):
+    path = tmp_path / "config.toml"
+    path.write_text(
+        """
+[location]
+query = "Dadar, Mumbai"
+display_name = "Dadar, Mumbai"
+latitude = 19.0178
+longitude = 72.8478
+
+[radar]
+radius_km = 10.0
+refresh_seconds = 3
+""".strip(),
+        encoding="utf-8",
+    )
+    config = load_config(path)
+    assert config.radar.refresh_seconds == 5
+
+    reloaded = load_config(path)
+    assert reloaded.radar.refresh_seconds == 5
+
+
 def test_validate_refresh_seconds():
     assert validate_refresh_seconds(5) == 5
-    assert validate_refresh_seconds(3) == 3
-    with pytest.raises(ConfigError, match="at least 3 seconds"):
+    assert validate_refresh_seconds(300) == 300
+    with pytest.raises(ConfigError, match="at least 5 seconds"):
+        validate_refresh_seconds(3)
+    with pytest.raises(ConfigError, match="at least 5 seconds"):
         validate_refresh_seconds(1)
     with pytest.raises(ConfigError):
         validate_refresh_seconds(0)

@@ -13,9 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ADSBDB enrichment for routes and airlines (replaces adsb.lol routeset in CLI)
 - ICAO callsign prefix airline inference when enrichment has no airline
 - Top-five nearby aircraft list with numbered radar markers (`1`–`5`)
-- Rate limits: 3 s min / 5 s default refresh, 30 ADSBDB req/min, enrichment TTL cache
-- Nominatim 1 req/s throttle; legacy `refresh_seconds < 3` auto-upgraded on load
+- Rate limits: 5 s min / 5 s default refresh, 30 ADSBDB req/min, enrichment TTL cache
+- Nominatim 1 req/s throttle; legacy `refresh_seconds < 5` auto-upgraded on load
 - Local time display via `timezonefinder` and optional `timezone` in config
+- README demo GIF and VHS tape (`docs/assets/demo-quick.*`)
 
 ### Changed
 
@@ -23,11 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Radar marker collision handling (offsets when on ring dots or overlapping)
 - Airline display shortens trailing ` Airlines` / ` Air Lines`
 - Documentation overhaul for providers, rate limits, and usage
+- Provider User-Agent strings track package `__version__`
 
 ### Fixed
 
-- OpenSky HTTP 429 at 1 s refresh (adsb.lol default + minimum 3 s refresh)
+- OpenSky HTTP 429 at aggressive refresh (adsb.lol default + minimum 5 s refresh)
 - ADSBDB HTTP 404 logged as debug, not terminal warning
+- ADSBDB route lookup falls back to callsign endpoint when aircraft hex lookup misses
 - Aircraft markers skipped on ring dots
 
 ### Dependencies

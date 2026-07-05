@@ -2,7 +2,7 @@
 
 **See what's flying above you - without leaving your terminal.**
 
-![TermRadar live demo](docs/assets/demo-quick.gif)
+![TermRadar live demo](https://raw.githubusercontent.com/rusty3699/termradar/main/docs/assets/demo-quick.gif)
 
 TermRadar is a lightweight live aircraft radar for developers, programmers, and aviation enthusiasts.
 
@@ -19,6 +19,13 @@ You get a live radar centered on your location: nearby callsigns, distance, bear
 The core is display-agnostic. Today: a polished terminal UI. Planned: Raspberry Pi fullscreen and small displays.
 
 ## Quick start
+
+```bash
+pip install termradar
+termradar
+```
+
+From source:
 
 ```bash
 git clone https://github.com/rusty3699/termradar.git
@@ -52,7 +59,7 @@ Config: `~/.config/termradar/config.toml` (Linux).
 ```bash
 termradar --location "Baner, Pune"      # temporary location (this run only)
 termradar --radius 25                   # search radius in km
-termradar --refresh 10                  # refresh interval (min 3 s)
+termradar --refresh 10                  # refresh interval (min 5 s)
 termradar --aircraft-provider opensky   # OpenSky instead of adsb.lol
 termradar --enrichment-limit 10         # max aircraft to enrich per scan
 termradar --reset-location              # re-run setup
@@ -62,7 +69,7 @@ termradar --help
 
 | Setting | Default | Allowed |
 |---------|---------|---------|
-| Refresh | 5 s | 3-300 s |
+| Refresh | 5 s | 5-300 s |
 | Radius | 15 km | 1-250 km |
 | Aircraft source | adsb.lol | `adsblol` or `opensky` |
 | Enrichment | 10 nearest | `--enrichment-limit` |
