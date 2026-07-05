@@ -11,7 +11,7 @@ GeocodingProvider          (setup / location override only)
         ↓
      Location  (+ timezone)
         ↓
-AircraftProvider           (every scan — default: adsb.lol)
+AircraftProvider           (every scan - default: adsb.lol)
         ↓
    RadarEngine  ◄──── CachedRouteProvider ──► AdsbDbRouteProvider
         ↓
@@ -36,7 +36,7 @@ RadarEngine.scan()
   → RadarSnapshot
 ```
 
-Geocoding and timezone resolution run only during onboarding, `--reset-location`, or `--location` — **not** on refresh.
+Geocoding and timezone resolution run only during onboarding, `--reset-location`, or `--location` - **not** on refresh.
 
 ## Live display loop
 
@@ -69,8 +69,8 @@ Markers use collision offsets when the ideal grid cell is occupied (ring dot, ce
 
 **Nearby aircraft panel**
 
-- **CLOSEST** — full detail for nearest aircraft (callsign, airline, route, distance, bearing, speed, altitude)
-- **NEARBY** — compact top-five list: rank, callsign, distance, compass direction
+- **CLOSEST** - full detail for nearest aircraft (callsign, airline, route, distance, bearing, speed, altitude)
+- **NEARBY** - compact top-five list: rank, callsign, distance, compass direction
 
 Narrow terminals fall back to a compact aircraft table.
 
@@ -123,7 +123,7 @@ src/termradar/
 | Aircraft provider down | Error state; last snapshot shown as stale if available |
 | ADSBDB miss / 404 | Aircraft shown; airline may come from callsign prefix |
 | Enrichment rate limit | Skip remaining lookups this scan; retry later |
-| Missing altitude / route | Graceful fallbacks (`—`, `Unknown airline`, `Route unavailable`) |
+| Missing altitude / route | Graceful fallbacks (`-`, `Unknown airline`, `Route unavailable`) |
 | Ctrl+C | Clean exit |
 
 ## Configuration
@@ -132,7 +132,7 @@ Stored at `~/.config/termradar/config.toml` (platformdirs).
 
 | Key | Default | Notes |
 |-----|---------|-------|
-| `location.*` | — | Set during onboarding |
+| `location.*` | - | Set during onboarding |
 | `radar.radius_km` | 15 | 1–250 km |
 | `radar.refresh_seconds` | 5 | 3–300; values &lt; 3 upgraded on load |
 

@@ -1,6 +1,6 @@
 # Data providers
 
-TermRadar talks to three external services. Provider modules own all HTTP and JSON parsing — nothing else in the codebase calls these APIs directly.
+TermRadar talks to three external services. Provider modules own all HTTP and JSON parsing - nothing else in the codebase calls these APIs directly.
 
 Constants below live in `src/termradar/core/limits.py` and are enforced in code.
 
@@ -25,7 +25,7 @@ TermRadar applies conservative limits so the CLI stays polite to free public API
 | Setting | Value | Where enforced |
 |---------|-------|----------------|
 | Default refresh interval | **5 seconds** | Config default, onboarding |
-| Minimum refresh interval | **3 seconds** | `validate_refresh_seconds()` — `--refresh 1` is rejected |
+| Minimum refresh interval | **3 seconds** | `validate_refresh_seconds()` - `--refresh 1` is rejected |
 | Maximum refresh interval | **300 seconds** | Config validation |
 | Enrichment requests | **30 / minute** (rolling) | `CachedRouteProvider` + `MinuteRateLimiter` |
 | Enrichment burst per scan | **10 aircraft** (default) | `RadarEngine.enrichment_limit` / `--enrichment-limit` |
@@ -46,7 +46,7 @@ never during refresh:
   Nominatim geocoding
 ```
 
-**Example — 8 aircraft appear, all new callsigns:**
+**Example - 8 aircraft appear, all new callsigns:**
 
 ```text
 Refresh 1:  1 adsb.lol + up to 8 ADSBDB (burst capped at 10)
@@ -61,23 +61,23 @@ Saved `refresh_seconds` below 3 (e.g. `1` from older versions) is automatically 
 
 ---
 
-## Geocoding — Nominatim (OpenStreetMap)
+## Geocoding - Nominatim (OpenStreetMap)
 
 | | |
 |---|---|
 | Module | `termradar.providers.geocoding.NominatimGeocodingProvider` |
 | Endpoint | `GET https://nominatim.openstreetmap.org/search` |
-| Auth | None — custom `User-Agent: TermRadar/…` required |
+| Auth | None - custom `User-Agent: TermRadar/…` required |
 
 **When used:** onboarding, `--reset-location`, `--location` override. **Never** called from the live refresh loop.
 
 **Behaviour:** Free-text query → up to 5 candidates. 10 s timeout. Minimum 1 s between requests. Timezone is resolved from coordinates (`timezonefinder`) and stored in config when available.
 
-© [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors — [Nominatim usage policy](https://operations.osmfoundation.org/policies/nominatim/).
+© [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors - [Nominatim usage policy](https://operations.osmfoundation.org/policies/nominatim/).
 
 ---
 
-## Aircraft — adsb.lol (default)
+## Aircraft - adsb.lol (default)
 
 | | |
 |---|---|
@@ -91,7 +91,7 @@ Saved `refresh_seconds` below 3 (e.g. `1` from older versions) is automatically 
 
 **Response fields used:** `hex`, `flight` (callsign), `lat`, `lon`, `alt_baro`, `gs` (knots), `track`, `r` (registration), `t` (type). Privacy-masked callsigns (`@@@@@@@@`) are treated as unknown.
 
-Data by [adsb.lol](https://adsb.lol) — [ODbL](https://opendatacommons.org/licenses/odbl/1-0/).
+Data by [adsb.lol](https://adsb.lol) - [ODbL](https://opendatacommons.org/licenses/odbl/1-0/).
 
 **Switch provider:**
 
@@ -101,7 +101,7 @@ termradar --aircraft-provider opensky
 
 ---
 
-## Aircraft — OpenSky Network (optional)
+## Aircraft - OpenSky Network (optional)
 
 | | |
 |---|---|
@@ -109,13 +109,13 @@ termradar --aircraft-provider opensky
 | Endpoint | `GET https://opensky-network.org/api/states/all` |
 | Auth | Anonymous (heavily rate-limited) |
 
-Bounding-box fetch; engine filters by radius. Prefer adsb.lol for frequent refresh — OpenSky anonymous access often returns HTTP 429 at short intervals.
+Bounding-box fetch; engine filters by radius. Prefer adsb.lol for frequent refresh - OpenSky anonymous access often returns HTTP 429 at short intervals.
 
 Data by the [OpenSky Network](https://opensky-network.org).
 
 ---
 
-## Enrichment — ADSBDB (default)
+## Enrichment - ADSBDB (default)
 
 | | |
 |---|---|
@@ -129,19 +129,19 @@ Data by the [OpenSky Network](https://opensky-network.org).
 
 **Returns when known:** airline name, origin IATA/ICAO, destination IATA/ICAO.
 
-**Unknown data:** HTTP 404 with `{"response":"unknown callsign"}` is normal — logged at debug only, not shown in the UI.
+**Unknown data:** HTTP 404 with `{"response":"unknown callsign"}` is normal - logged at debug only, not shown in the UI.
 
-**Callsign prefix fallback:** if ADSBDB has no airline, TermRadar infers from the ICAO prefix (`AIC` → Air India, `IGO` → IndiGo, `AKJ` → Akasa Air, …). Route and airline are resolved **independently** — you can see airline without route and vice versa.
+**Callsign prefix fallback:** if ADSBDB has no airline, TermRadar infers from the ICAO prefix (`AIC` → Air India, `IGO` → IndiGo, `AKJ` → Akasa Air, …). Route and airline are resolved **independently** - you can see airline without route and vice versa.
 
 **Aircraft owner fallback:** combined aircraft lookup may return `registered_owner` when no flight route exists.
 
-Flight route data includes work by David Taylor and Jim Mason — see [adsbdb.com](https://adsbdb.com).
+Flight route data includes work by David Taylor and Jim Mason - see [adsbdb.com](https://adsbdb.com).
 
 External ADSBDB tiers (for reference): 512+ feeders ≈ 60 req/min; TermRadar caps at **30/min** internally regardless.
 
 ---
 
-## Enrichment — adsb.lol routeset (not CLI default)
+## Enrichment - adsb.lol routeset (not CLI default)
 
 | | |
 |---|---|

@@ -103,7 +103,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--version",
         action="version",
-        version=f"%(prog)s {__version__} — Made with <3 Anish",
+        version=f"%(prog)s {__version__} - Made with <3 Anish",
     )
     parser.add_argument(
         "--location",

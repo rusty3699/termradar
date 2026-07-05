@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "termradar"
 version = "0.2.0"
-description = "See what's flying above you — live aircraft radar for your terminal"
+description = "See what's flying above you - live aircraft radar for your terminal"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
