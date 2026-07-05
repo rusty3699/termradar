@@ -2,6 +2,8 @@
 
 **See what's flying above you - without leaving your terminal.**
 
+![TermRadar live demo](docs/assets/demo-quick.gif)
+
 TermRadar is a lightweight live aircraft radar for developers, programmers, and aviation enthusiasts.
 
 You're coding, you hear an aircraft overhead, or spot something from the window. Instead of opening a browser or reaching for a flight-tracking app, open a terminal and run:
@@ -10,9 +12,7 @@ You're coding, you hear an aircraft overhead, or spot something from the window.
 termradar
 ```
 
-You get a live radar centered on your location: nearby callsigns, distance, bearing, speed, altitude, and route info when available. Use it for the quick answer, then jump to [Flightradar24](https://www.flightradar24.com) or another tracker when you want deeper details.
-
-![TermRadar live demo](docs/assets/demo-quick.gif)
+You get a live radar centered on your location: nearby callsigns, distance, bearing, speed, altitude, and route info when available. Use it for the quick answer, then jump to another tracker when you want deeper details.
 
 > **One radar engine. Multiple displays.**
 
@@ -70,8 +70,6 @@ termradar --help
 Rate limits and provider details: [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md)
 
 ## Example
-
-The demo above was recorded near Mumbai with [VHS](https://github.com/charmbracelet/vhs) — regenerate it from [`docs/assets/demo-quick.tape`](docs/assets/demo-quick.tape).
 
 ```text
 ╭──────────────────── TERMRADAR ────────────────────╮
