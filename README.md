@@ -74,7 +74,7 @@ termradar --help
 | Aircraft source | adsb.lol | `adsblol` or `opensky` |
 | Enrichment | 10 nearest | `--enrichment-limit` |
 
-Rate limits and provider details: [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md)
+Provider details and internal limits: [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md)
 
 ## How it works
 
@@ -96,7 +96,7 @@ setup only (not each refresh):
 | Doc | What it covers |
 |-----|----------------|
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design, UI layout, code boundaries |
-| [DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md) | APIs, rate limits, caching |
+| [DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md) | APIs, internal limits, caching |
 | [ROADMAP.md](docs/ROADMAP.md) | What's next |
 | [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Tests, lint, packaging |
 

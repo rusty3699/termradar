@@ -4,6 +4,10 @@ TermRadar talks to three external services. Provider modules own all HTTP and JS
 
 Constants below live in `src/termradar/core/limits.py` and are enforced in code.
 
+> TermRadar is an independent open-source project and is not affiliated with or endorsed by any of the data providers listed below. Provider availability, terms, and limits may change independently of TermRadar.
+
+TermRadar depends on third-party services that may be temporarily unavailable, rate-limited, or change independently. Provider failures are handled gracefully where possible; aircraft data may become stale and enrichment fields may be temporarily unavailable.
+
 ---
 
 ## Summary
@@ -18,9 +22,9 @@ Optional: `--aircraft-provider opensky` swaps the live aircraft source. The adsb
 
 ---
 
-## Rate limits (enforced by TermRadar)
+## Internal request limits and caching policy
 
-TermRadar applies conservative limits so the CLI stays polite to free public APIs.
+TermRadar applies conservative internal limits so the CLI stays polite to free public APIs. These are TermRadar's own operational controls, not official provider quotas.
 
 | Setting | Value | Where enforced |
 |---------|-------|----------------|
@@ -91,7 +95,7 @@ Saved `refresh_seconds` below 5 (e.g. `1` or `3` from older versions) is automat
 
 **Response fields used:** `hex`, `flight` (callsign), `lat`, `lon`, `alt_baro`, `gs` (knots), `track`, `r` (registration), `t` (type). Privacy-masked callsigns (`@@@@@@@@`) are treated as unknown.
 
-Data by [adsb.lol](https://adsb.lol) - [ODbL](https://opendatacommons.org/licenses/odbl/1-0/).
+Live aircraft data is provided by [adsb.lol](https://adsb.lol). See their project documentation and applicable [ODbL](https://opendatacommons.org/licenses/odbl/1-0/) terms.
 
 **Switch provider:**
 
@@ -137,7 +141,7 @@ Data by the [OpenSky Network](https://opensky-network.org).
 
 Flight route data includes work by David Taylor and Jim Mason - see [adsbdb.com](https://adsbdb.com).
 
-External ADSBDB tiers (for reference): 512+ feeders ≈ 60 req/min; TermRadar caps at **30/min** internally regardless.
+TermRadar applies its own conservative limit of **30 enrichment requests per minute**, independent of any higher provider-side allowance.
 
 ---
 

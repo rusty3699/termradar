@@ -138,7 +138,7 @@ Stored at `~/.config/termradar/config.toml` (platformdirs).
 
 CLI overrides (`--location`, `--radius`, `--refresh`, `--aircraft-provider`, `--enrichment-limit`) apply to the current run only unless `--reset-location` re-saves config.
 
-## Rate limits
+## Internal limits and caching
 
 See [DATA_PROVIDERS.md](DATA_PROVIDERS.md) for full detail. Summary:
 
