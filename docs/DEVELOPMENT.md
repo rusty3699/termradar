@@ -65,7 +65,7 @@ The README embeds the GIF with a relative path (`docs/assets/demo-quick.gif`) so
 **Before publishing to PyPI**, switch the README image to an absolute URL (PyPI cannot resolve relative paths), for example:
 
 ```markdown
-![TermRadar live demo](https://raw.githubusercontent.com/rusty3699/termradar/v0.3.0/docs/assets/demo-quick.gif)
+![TermRadar live demo](https://raw.githubusercontent.com/rusty3699/termradar/v0.3.1/docs/assets/demo-quick.gif)
 ```
 
 Use the release tag you publish. The repository must be **public** for the image to render on GitHub and PyPI.
@@ -86,7 +86,7 @@ ruff format --check src tests
 
 ```bash
 python -m build
-pip install dist/termradar-0.3.0-py3-none-any.whl
+pip install dist/termradar-0.3.1-py3-none-any.whl
 termradar --help
 termradar --version
 python -c "import termradar; print(termradar.__version__)"

@@ -4,13 +4,21 @@ build-backend = "hatchling.build"
 
 [project]
 name = "termradar"
-version = "0.3.0"
+version = "0.3.1"
 description = "See what's flying above you - live aircraft radar for your terminal"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
-authors = [{ name = "TermRadar Contributors" }]
-keywords = ["aircraft", "ads-b", "radar", "terminal", "aviation"]
+authors = [{ name = "Anish Tipnis" }]
+keywords = [
+    "aircraft",
+    "ads-b",
+    "aviation",
+    "flight-tracking",
+    "radar",
+    "terminal",
+    "cli",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
@@ -44,6 +52,7 @@ termradar = "termradar.cli:main"
 [project.urls]
 Homepage = "https://github.com/rusty3699/termradar"
 Repository = "https://github.com/rusty3699/termradar"
+Documentation = "https://github.com/rusty3699/termradar/tree/main/docs"
 Issues = "https://github.com/rusty3699/termradar/issues"
 
 [tool.hatch.build.targets.wheel]
