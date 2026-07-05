@@ -36,7 +36,7 @@ pytest -v
 pytest --cov=termradar --cov-report=term-missing
 ```
 
-All tests use mocked HTTP — no network required for the suite.
+All tests use mocked HTTP - no network required for the suite.
 
 Key test areas:
 
@@ -93,7 +93,7 @@ Change these in one place; `config/storage.py`, `cli.py`, and `CachedRouteProvid
 
 ## Notes
 
-- User config: `~/.config/termradar/config.toml` — never commit
+- User config: `~/.config/termradar/config.toml` - never commit
 - Do not call providers from renderer code
 - Provider JSON must not leak outside `providers/`
-- ADSBDB 404 / unknown callsign is expected — handle quietly at debug level
+- ADSBDB 404 / unknown callsign is expected - handle quietly at debug level

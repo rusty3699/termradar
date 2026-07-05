@@ -1,6 +1,6 @@
 # Roadmap
 
-## Phase 1 — Core Engine
+## Phase 1 - Core Engine
 
 **Status: Completed**
 
@@ -9,7 +9,7 @@
 - [x] `RadarEngine.scan()`, config storage, CLI foundation
 - [x] Tests and documentation
 
-## Phase 2 — Terminal MVP
+## Phase 2 - Terminal MVP
 
 **Status: Completed**
 
@@ -19,7 +19,7 @@
 
 ---
 
-## Phase 3 — Raspberry Pi Fullscreen and TFT Display Support
+## Phase 3 - Raspberry Pi Fullscreen and TFT Display Support
 
 **Status: Planned**
 
@@ -550,7 +550,7 @@ Only the display layer should differ.
 
 ---
 
-## Phase 4 — OLED Displays
+## Phase 4 - OLED Displays
 
 **Status: Planned**
 
@@ -558,14 +558,14 @@ Only the display layer should differ.
 - Minimal single-aircraft layouts
 - GPIO button input (where applicable)
 
-## Phase 5 — Local ADS-B Sources
+## Phase 5 - Local ADS-B Sources
 
 **Status: Planned**
 
 - RTL-SDR, `readsb`, `dump1090` feed providers
 - Local receiver as alternative aircraft source
 
-## Phase 6 — Alerts and Integrations
+## Phase 6 - Alerts and Integrations
 
 **Status: Planned**
 
