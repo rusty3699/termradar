@@ -8,6 +8,7 @@ from urllib.parse import quote
 
 import httpx
 
+from termradar import __version__
 from termradar.core.models import RouteInfo
 from termradar.providers.routes import RouteLookup
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 _DEFAULT_BASE_URL = "https://api.adsbdb.com"
 _DEFAULT_TIMEOUT = 10.0
-_USER_AGENT = "TermRadar/0.2.0 (https://github.com/rusty3699/termradar)"
+_USER_AGENT = f"TermRadar/{__version__} (https://github.com/rusty3699/termradar)"
 
 
 class AdsbDbRouteProvider(RouteLookup):

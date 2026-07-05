@@ -2,7 +2,7 @@
 
 **See what's flying above you - without leaving your terminal.**
 
-![TermRadar live demo](docs/assets/demo-quick.gif)
+![TermRadar live demo](https://raw.githubusercontent.com/rusty3699/termradar/main/docs/assets/demo-quick.gif)
 
 TermRadar is a lightweight live aircraft radar for developers, programmers, and aviation enthusiasts.
 
@@ -19,6 +19,13 @@ You get a live radar centered on your location: nearby callsigns, distance, bear
 The core is display-agnostic. Today: a polished terminal UI. Planned: Raspberry Pi fullscreen and small displays.
 
 ## Quick start
+
+```bash
+pip install termradar
+termradar
+```
+
+From source:
 
 ```bash
 git clone https://github.com/rusty3699/termradar.git

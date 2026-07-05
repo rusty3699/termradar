@@ -49,8 +49,7 @@ def build_radar_canvas(
     occupied: set[GridPoint] = set()
 
     ranks = {
-        ac.hex_id: rank
-        for rank, ac in enumerate(snapshot.aircraft[:_NEARBY_LIST_SIZE], start=1)
+        ac.hex_id: rank for rank, ac in enumerate(snapshot.aircraft[:_NEARBY_LIST_SIZE], start=1)
     }
 
     ranked = [ac for ac in snapshot.aircraft if ac.hex_id in ranks]

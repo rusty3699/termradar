@@ -10,13 +10,14 @@ from urllib.parse import urlencode
 
 import httpx
 
+from termradar import __version__
 from termradar.core.limits import GEOCODING_MIN_INTERVAL_SECONDS
 from termradar.core.models import LocationCandidate
 
 logger = logging.getLogger(__name__)
 
 _DEFAULT_BASE_URL = "https://nominatim.openstreetmap.org/search"
-_DEFAULT_USER_AGENT = "TermRadar/0.2.0 (https://github.com/rusty3699/termradar)"
+_DEFAULT_USER_AGENT = f"TermRadar/{__version__} (https://github.com/rusty3699/termradar)"
 _DEFAULT_TIMEOUT = 10.0
 
 

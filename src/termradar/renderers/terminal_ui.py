@@ -228,8 +228,5 @@ def _format_closest_metrics(ac) -> str:
 def _format_nearby_line(rank: int, ac) -> str:
     callsign = format_callsign(ac)
     distance = format_distance_km(ac.distance_km)
-    if ac.bearing_deg is None:
-        compass = "—"
-    else:
-        compass = bearing_to_compass(ac.bearing_deg)
+    compass = "—" if ac.bearing_deg is None else bearing_to_compass(ac.bearing_deg)
     return f"{rank}  {callsign:<8}  {distance:>7}  {compass}"
