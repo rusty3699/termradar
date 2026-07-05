@@ -19,12 +19,16 @@ AircraftProvider
         ↓
    RadarSnapshot
         ↓
-     Renderer
+ TerminalRenderer
+        ↓
+ Terminal output
 ```
+
+Future Pi and OLED renderers consume the same `RadarSnapshot`.
 
 ### Geocoding (setup only)
 
-Geocoding runs during first-run onboarding, explicit location changes (`--reset-location`), or future config commands — **not** on every radar refresh.
+Geocoding runs during first-run onboarding, `--reset-location`, or `--location` override — **not** on every radar refresh.
 
 ```text
 user query → geocoder search → candidates → user selection → saved coordinates
@@ -33,28 +37,41 @@ user query → geocoder search → candidates → user selection → saved coord
 ### Radar scan pipeline
 
 ```text
-Location input (from config)
+Saved location
       ↓
-AircraftProvider.get_nearby()
+RadarEngine.scan()
       ↓
 Normalized Aircraft models
       ↓
-distance_km() + bearing_deg()
+distance_km() + bearing_deg()   [engine]
       ↓
-Radius filtering
+Radius filtering + sorting      [engine]
       ↓
-Nearest-first sorting
-      ↓
-Route enrichment (limited count, cached)
+Route enrichment (cached)       [engine + RouteProvider]
       ↓
 RadarSnapshot
+      ↓
+TerminalRenderer
 ```
+
+### Live refresh orchestration
+
+```text
+CLI / RadarSession
+      ↓
+loop: engine.scan() → TerminalView → TerminalRenderer → terminal
+      ↓
+sleep(refresh_seconds)
+```
+
+`RadarSession` owns the refresh loop. The renderer is stateless and receives a `TerminalView` each frame.
 
 ## Package layout
 
 ```text
 src/termradar/
-├── cli.py              # CLI entry point and onboarding
+├── cli.py              # Argument parsing, onboarding, session startup
+├── session.py          # Live refresh loop orchestration
 ├── core/
 │   ├── models.py       # Location, Aircraft, RadarSnapshot, …
 │   ├── distance.py     # Haversine distance
@@ -68,32 +85,61 @@ src/termradar/
 ├── config/
 │   └── storage.py      # TOML config load/save/validate
 └── renderers/
-    └── terminal.py     # Basic text output
+    ├── formatting.py   # Pure display formatters
+    ├── radar_coords.py # bearing/distance → grid coordinates
+    ├── radar_canvas.py # ASCII radar drawing
+    ├── terminal_ui.py  # Rich terminal layout
+    └── terminal_view.py# View model for one frame
 ```
 
-## Abstractions
+## Responsibility boundaries
 
-| Protocol | Responsibility |
-|----------|----------------|
+| Component | Responsibility |
+|-----------|----------------|
 | `GeocodingProvider` | Free-text place → `LocationCandidate` list |
 | `AircraftProvider` | Lat/lon/radius → normalized `Aircraft` list |
 | `RouteProvider` | Callsign → `RouteInfo` or `None` |
+| `RadarEngine` | Fetch, geometry, filter, sort, enrich |
+| `CachedRouteProvider` | In-memory route lookup cache |
+| `RadarSession` | Refresh loop, error/stale state, terminal sizing |
+| `TerminalRenderer` | Layout, radar plot, panels, tables |
+| `radar_to_grid()` | Polar → terminal grid (renderer utility) |
 
-External API JSON never leaves provider modules. The engine operates only on normalized models.
+The renderer must **not** call providers, compute Haversine distance, or filter by radius.
 
-## Enrichment limit
+## Terminal radar coordinates
 
-`RadarEngine` accepts an `enrichment_limit` parameter (default 10). Only the nearest N aircraft with callsigns are enriched. Renderers or CLI flags choose the limit — the engine does not embed display-specific defaults beyond its constructor argument.
+`radar_to_grid()` maps engine-provided `distance_km` and `bearing_deg` to grid cells:
+
+```text
+0° north  → top of grid
+90° east  → right
+180° south → bottom
+270° west → left
+```
+
+Distance is normalized against configured `radius_km`. Aircraft beyond radius are excluded from the plot.
 
 ## Error semantics
 
 | Failure | Behaviour |
 |---------|-----------|
-| Aircraft provider down | `RadarEngineError` raised; scan aborts |
-| Route lookup fails | Aircraft returned without route fields |
-| Missing callsign/altitude | Aircraft still included in snapshot |
+| Aircraft provider down | Show error; preserve last snapshot as stale if available |
+| Route lookup fails | Aircraft shown without route fields |
+| Missing callsign/altitude | Graceful display fallbacks (`—`, `Unknown`) |
 | Geocoding failure | Onboarding reports error; no config saved |
+| Ctrl+C | Clean exit, no traceback |
 
-## Configuration
+## Configuration flow
 
-Persistent TOML config via `platformdirs`. Validated on load. Corrupted files raise `ConfigError`.
+```text
+first run / --reset-location → onboarding → save config.toml
+returning user             → load config → start session
+--location / --radius / --refresh → override for current run only
+```
+
+## Cache behavior
+
+Route enrichment uses `CachedRouteProvider`. Cache persists for the CLI process lifetime. Route lookups are not repeated for the same callsign across refresh cycles within one session.
+
+`enrichment_limit` on `RadarEngine` caps how many nearest aircraft are enriched per scan.

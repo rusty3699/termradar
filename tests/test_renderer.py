@@ -1,4 +1,4 @@
-"""Tests for terminal renderer."""
+"""Tests for legacy render_snapshot helper."""
 
 from termradar.core.models import Aircraft, Location, RadarSnapshot
 from termradar.renderers.terminal import render_snapshot
@@ -11,7 +11,7 @@ def test_render_empty_snapshot():
         aircraft=(),
     )
     text = render_snapshot(snapshot)
-    assert "No aircraft within range" in text
+    assert "No aircraft currently detected" in text
     assert "Dadar, Mumbai" in text
 
 

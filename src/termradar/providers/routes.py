@@ -89,7 +89,7 @@ class AdsbLolRouteProvider(RouteLookup):
             logger.warning("Route lookup network error for %s", callsign)
             return None
 
-        if response.status_code != 200:
+        if response.status_code not in (200, 201):
             logger.warning(
                 "Route lookup HTTP %s for %s",
                 response.status_code,
@@ -97,10 +97,8 @@ class AdsbLolRouteProvider(RouteLookup):
             )
             return None
 
-        try:
-            payload = response.json()
-        except ValueError:
-            logger.warning("Malformed route response for %s", callsign)
+        payload = _decode_route_response(response, callsign)
+        if payload is None:
             return None
 
         return _parse_route_payload(payload, callsign)
@@ -110,7 +108,37 @@ class AdsbLolRouteProvider(RouteLookup):
             self._client.close()
 
 
+def _decode_route_response(response: httpx.Response, callsign: str) -> Any | None:
+    """Decode a routeset response body.
+
+    adsb.lol commonly returns HTTP 201 with an empty body when no route exists.
+    That is expected and should not be logged as an error.
+    """
+    if not response.content or not response.text.strip():
+        logger.debug("No route data for %s", callsign)
+        return None
+
+    try:
+        return response.json()
+    except ValueError:
+        logger.warning(
+            "Unexpected non-JSON route response for %s (%d bytes)",
+            callsign,
+            len(response.content),
+        )
+        return None
+
+
 def _parse_route_payload(payload: Any, callsign: str) -> RouteInfo | None:
+    if isinstance(payload, dict):
+        for key in ("routes", "data", "results"):
+            nested = payload.get(key)
+            if isinstance(nested, list):
+                payload = nested
+                break
+        else:
+            return _parse_route_item(payload) if payload else None
+
     if not isinstance(payload, list) or not payload:
         return None
 

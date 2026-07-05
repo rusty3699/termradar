@@ -5,38 +5,39 @@
 - Python 3.11+
 - Linux, macOS, or Windows
 
-## Environment setup
+## Clone repository
 
 ```bash
+git clone https://github.com/rusty3699/termradar.git
 cd termradar
+```
+
+## Create virtual environment
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
 ```
 
-## Install dependencies
+## Install development dependencies
 
 ```bash
 pip install -e ".[dev]"
 ```
 
-Runtime dependencies: `httpx`, `platformdirs`, `tomli-w`.
+Runtime dependencies: `httpx`, `platformdirs`, `rich`, `tomli-w`.
 
-Dev dependencies: `pytest`, `pytest-cov`, `ruff`.
+Dev dependencies: `build`, `pytest`, `pytest-cov`, `ruff`.
 
-## Run CLI
+## Run TermRadar locally
 
 ```bash
 termradar
-termradar --radius-km 25
-termradar --reset-location
-termradar --enrichment-limit 5
-```
-
-Equivalent module invocation:
-
-```bash
 python -m termradar
+termradar --radius 25 --refresh 10
+termradar --location "Baner, Pune"
+termradar --reset-location
+termradar --help
 ```
 
 ## Run tests
@@ -59,7 +60,26 @@ ruff check src tests
 
 ```bash
 ruff format src tests
-ruff format --check src tests   # CI-style check only
+ruff format --check src tests
+```
+
+## Build package
+
+```bash
+python -m build
+```
+
+Produces `dist/termradar-*.tar.gz` (sdist) and `dist/termradar-*.whl` (wheel).
+
+## Install local wheel (clean validation)
+
+```bash
+python -m venv /tmp/termradar-clean
+source /tmp/termradar-clean/bin/activate
+pip install dist/termradar-*.whl
+termradar --help
+python -c "import termradar; print(termradar.__version__)"
+deactivate
 ```
 
 ## Project layout
@@ -79,6 +99,10 @@ User config is written to the platform config directory (e.g. `~/.config/termrad
 termradar --reset-location
 ```
 
-Or point tests at a temporary path via `load_config(path)` / `save_config(config, path)`.
-
 Never commit user config or real coordinates to the repository.
+
+## Renderer development notes
+
+- Test pure helpers in `renderers/formatting.py` and `renderers/radar_coords.py`
+- Use `TerminalRenderer.render_text()` for layout tests without brittle ANSI snapshots
+- Do not call providers from renderer code

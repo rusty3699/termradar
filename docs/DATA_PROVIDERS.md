@@ -8,7 +8,7 @@ TermRadar uses pluggable providers so data sources can be swapped without touchi
 |---|---|
 | **Module** | `termradar.providers.geocoding.NominatimGeocodingProvider` |
 | **Endpoint** | `https://nominatim.openstreetmap.org/search` |
-| **When used** | First-run setup, `--reset-location` only |
+| **When used** | First-run setup, `--reset-location`, `--location` override |
 | **Auth** | None (custom User-Agent required) |
 
 ### Behaviour
@@ -84,7 +84,11 @@ callsign → cache hit? → return cached RouteInfo
            route API → store → return
 ```
 
-In-memory cache for Phase 1. Cache key is uppercased callsign. Failed lookups (`None`) are cached too.
+In-memory cache for the CLI session lifetime. Cache key is uppercased callsign. Failed lookups (`None`) are cached too. Cached results are reused across refresh cycles within one `termradar` run.
+
+### Refresh behavior
+
+Each refresh calls `RadarEngine.scan()`, which fetches aircraft and enriches only uncached callsigns (up to `enrichment_limit`). Geocoding is not performed during refresh.
 
 ### Enrichment limit
 
