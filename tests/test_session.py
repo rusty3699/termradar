@@ -1,6 +1,5 @@
 """Tests for live radar session orchestration."""
 
-
 from fakes import FakeAircraftProvider, FakeRouteProvider, make_location
 from termradar.core.engine import RadarEngine
 from termradar.core.models import Aircraft

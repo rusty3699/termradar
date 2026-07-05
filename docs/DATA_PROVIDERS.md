@@ -1,26 +1,19 @@
 # Data providers
 
-TermRadar uses pluggable providers so data sources can be swapped without touching the radar engine.
+Providers are pluggable. External API JSON never leaves provider modules.
 
 ## Geocoding — Nominatim (OpenStreetMap)
 
 | | |
 |---|---|
-| **Module** | `termradar.providers.geocoding.NominatimGeocodingProvider` |
-| **Endpoint** | `https://nominatim.openstreetmap.org/search` |
-| **When used** | First-run setup, `--reset-location`, `--location` override |
-| **Auth** | None (custom User-Agent required) |
+| Module | `termradar.providers.geocoding.NominatimGeocodingProvider` |
+| Endpoint | `https://nominatim.openstreetmap.org/search` |
+| When used | Onboarding, `--reset-location`, `--location` only |
+| Auth | None (custom User-Agent required) |
 
-### Behaviour
+Accepts free-text queries (`Mumbai`, `400014`, `Dadar East Hindu Colony`). Returns up to 5 candidates. 10 s timeout, no retries.
 
-- Accepts free-text queries (`Mumbai`, `Baner, Pune`, `Pune Airport`)
-- Returns up to 5 `LocationCandidate` results
-- 10 s HTTP timeout; no automatic retries
-- Raises `GeocodingError` on network failure, timeout, or malformed response
-
-### Attribution
-
-© [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. Nominatim [usage policy](https://operations.osmfoundation.org/policies/nominatim/) applies — avoid bulk geocoding; TermRadar geocodes only during setup.
+© [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. See [Nominatim usage policy](https://operations.osmfoundation.org/policies/nominatim/).
 
 ---
 
@@ -28,101 +21,47 @@ TermRadar uses pluggable providers so data sources can be swapped without touchi
 
 | | |
 |---|---|
-| **Module** | `termradar.providers.aircraft.OpenSkyAircraftProvider` |
-| **Endpoint** | `https://opensky-network.org/api/states/all` |
-| **When used** | Every `RadarEngine.scan()` |
-| **Auth** | None for anonymous access (rate-limited) |
+| Module | `termradar.providers.aircraft.OpenSkyAircraftProvider` |
+| Endpoint | `https://opensky-network.org/api/states/all` |
+| When used | Every `RadarEngine.scan()` |
+| Auth | Anonymous (rate-limited) |
 
-### Field mapping
+Sends a bounding box; the engine filters precisely by radius. Altitude and callsign may be missing.
 
-| OpenSky state index | Aircraft field |
-|---------------------|----------------|
-| `[0]` icao24 | `hex_id` |
-| `[1]` callsign | `callsign` (stripped) |
-| `[6]` latitude | `latitude` |
-| `[5]` longitude | `longitude` |
-| `[7]` baro_altitude (m) | `altitude_ft` |
-| `[9]` velocity (m/s) | `ground_speed_knots` |
-| `[10]` true_track | `track_deg` |
-
-A bounding box approximating the search radius is sent to the API; precise radius filtering happens in the engine.
-
-### Known limits
-
-- Anonymous API rate limits apply
-- Coverage depends on OpenSky feeder network density
-- Altitude may be missing for some aircraft
-- Callsigns may be empty or stale
-
-### Attribution
-
-Data provided by the [OpenSky Network](https://opensky-network.org).
+Data by the [OpenSky Network](https://opensky-network.org).
 
 ---
 
-## Route enrichment — adsb.lol
+## Routes — adsb.lol
 
 | | |
 |---|---|
-| **Module** | `termradar.providers.routes.AdsbLolRouteProvider` |
-| **Endpoint** | `https://api.adsb.lol/api/0/routeset` |
-| **When used** | During scan for nearest N aircraft with callsigns |
-| **Auth** | None |
+| Module | `termradar.providers.routes.AdsbLolRouteProvider` |
+| Endpoint | `https://api.adsb.lol/api/0/routeset` |
+| When used | Enrichment for nearest N aircraft with callsigns |
+| Auth | None |
 
-### Behaviour
+POST JSON array of callsigns. HTTP 201 with empty body means no route — handled silently. Results cached in-memory for the session.
 
-- POST JSON array of callsigns
-- Parses `_airport_codes_iata` (e.g. `BOM-DEL`) into origin/destination
-- Returns `None` on failure — scan continues
-- Wrapped by `CachedRouteProvider` to avoid repeat lookups
-
-### Caching
-
-```text
-callsign → cache hit? → return cached RouteInfo
-                ↓ miss
-           route API → store → return
-```
-
-In-memory cache for the CLI session lifetime. Cache key is uppercased callsign. Failed lookups (`None`) are cached too. Cached results are reused across refresh cycles within one `termradar` run.
-
-### Refresh behavior
-
-Each refresh calls `RadarEngine.scan()`, which fetches aircraft and enriches only uncached callsigns (up to `enrichment_limit`). Geocoding is not performed during refresh.
-
-### Enrichment limit
-
-Configurable via `RadarEngine(enrichment_limit=…)` or CLI `--enrichment-limit`. Suggested defaults by display (chosen by caller, not engine):
-
-| Display | Suggested limit |
-|---------|-----------------|
-| OLED | 1 |
-| TFT | 5 |
-| Terminal | 10 |
-| Web | higher |
-
-### Known limits
-
-- Route data may be incomplete or outdated
-- Not all callsigns have route information
-- API availability not guaranteed
+Route data is best-effort. Many callsigns return no route.
 
 ---
 
-## Abstraction rationale
+## Caching and refresh
 
-Providers isolate:
+```text
+each refresh → RadarEngine.scan()
+             → aircraft fetch (always)
+             → route lookup only for uncached callsigns (up to enrichment_limit)
+```
 
-- URL construction and HTTP details
-- Unit conversion (metres → feet, m/s → knots)
-- Null / missing field handling
-- API-specific JSON parsing
+Default enrichment limit: 10 (CLI: `--enrichment-limit`).
 
-The engine sees only normalized `Aircraft` and `RouteInfo` objects. Tests mock HTTP at the provider boundary — no live network calls in CI.
+---
 
 ## Adding a provider
 
-1. Implement the relevant protocol in `termradar.providers.base`
-2. Map external responses to core models inside the provider module
+1. Implement the protocol in `providers/base.py`
+2. Map API responses to core models inside the provider
 3. Add mocked HTTP tests
-4. Document the source here with attribution and limits
+4. Document here with attribution and limits

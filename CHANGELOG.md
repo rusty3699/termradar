@@ -7,30 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- Route provider treats adsb.lol HTTP 201 empty responses as "no route" without warning spam
-- Live terminal display clears screen before rendering to avoid duplicate TERMRADAR headers
-
 ## [0.2.0] - 2026-07-05
 
 ### Added
 
-- Polished terminal UI with Rich panels, radar visualization, and nearest-aircraft panel
-- Aircraft table with graceful handling of missing callsign, altitude, speed, route, and airline
-- Testable `radar_to_grid()` coordinate mapping and ASCII radar canvas
-- Live refresh loop via `RadarSession` with configurable interval
+- Live terminal UI with Rich panels, radar visualization, and nearest-aircraft panel
+- `RadarSession` live refresh loop with configurable interval
 - CLI overrides: `--location`, `--radius` / `--radius-km`, `--refresh` (current run only)
-- Improved first-run onboarding with refresh interval prompt
-- Compact layout fallback for narrow terminals
+- Testable `radar_to_grid()` coordinate mapping and ASCII radar canvas
+- Graceful handling of missing aircraft metadata in the UI
 - Stale snapshot display when aircraft provider temporarily fails
 - PyPI-ready project metadata and local wheel build validation
 
 ### Changed
 
-- `termradar` now runs a live refresh loop instead of a single scan
+- `termradar` runs a live refresh loop instead of a single scan
 - Route provider accepts HTTP 201 responses from adsb.lol
-- Version bumped to 0.2.0
+- Improved first-run onboarding with refresh interval prompt
+
+### Fixed
+
+- Empty adsb.lol route responses (HTTP 201, no body) no longer log false "malformed" warnings
+- Terminal display clears screen before Live render to avoid duplicate headers
 
 ### Dependencies
 
@@ -40,8 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial Phase 1 package foundation with `src/` layout
-- Core domain models, `RadarEngine.scan()`, providers, config, CLI, and tests
+- Core radar engine, providers, config storage, CLI, and tests
 
 [Unreleased]: https://github.com/rusty3699/termradar/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/rusty3699/termradar/compare/v0.1.0...v0.2.0

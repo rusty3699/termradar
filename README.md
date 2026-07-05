@@ -2,55 +2,48 @@
 
 **See what's flying above you.**
 
-TermRadar is an open-source live aircraft radar for your terminal, with Raspberry Pi and small-display support planned.
+TermRadar is a live aircraft radar for your terminal. Enter a place name, and it shows nearby flights on a live-updating radar display with distance, altitude, speed, and route information when available.
 
-One radar engine powers multiple displays — terminal today, hardware displays tomorrow.
+> **One radar engine. Multiple displays.**
 
-## Available now
+The core engine is display-agnostic. Today: a polished terminal UI. Planned: Raspberry Pi fullscreen and small displays.
 
-- **Polished terminal UI** — radar visualization, nearest-aircraft panel, aircraft table
-- **Live refresh loop** — automatic updates with configurable interval
-- **Core radar engine** — fetch, normalize, filter, sort, and enrich aircraft
-- **Free-text geocoding** — enter a place name (e.g. `Baner, Pune`) via Nominatim/OpenStreetMap
-- **Location onboarding** — first-run CLI setup with candidate selection
-- **Persistent config** — saved coordinates and radar settings
-- **Live aircraft data** — OpenSky Network provider
-- **Route enrichment** — adsb.lol route lookup with in-memory cache
-- **CLI overrides** — temporary `--location`, `--radius`, and `--refresh` for a single run
-- **`termradar` CLI** — installable entry point
+## Features
 
-## Planned
-
-- Raspberry Pi TFT fullscreen renderer
-- OLED displays
-- Local ADS-B sources (RTL-SDR, `readsb`, `dump1090`)
-- Alerts and overhead mode
-- Telegram bot
-- Web UI
+| Available now | Planned |
+|---------------|---------|
+| Live terminal radar with refresh loop | Raspberry Pi fullscreen display |
+| ASCII radar plot + nearest-aircraft panel | OLED / e-paper displays |
+| Free-text location geocoding | Local ADS-B receivers |
+| OpenSky live aircraft data | Alerts and notifications |
+| Route enrichment (when available) | Web UI |
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for the full plan.
 
-## Installation
+## Requirements
 
-### From source (development)
+- Python 3.11+
+- Network access (aircraft and geocoding APIs)
+
+Works on Linux, macOS, Windows, and Raspberry Pi (terminal mode).
+
+## Install
+
+**From source** (recommended until PyPI release):
 
 ```bash
 git clone https://github.com/rusty3699/termradar.git
 cd termradar
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e .
 ```
 
-### From PyPI
-
-PyPI publication is prepared but not yet released. Once published:
+For development:
 
 ```bash
-pip install termradar
+pip install -e ".[dev]"
 ```
-
-Until then, install from source as shown above.
 
 ## Usage
 
@@ -58,82 +51,58 @@ Until then, install from source as shown above.
 termradar
 ```
 
-On first run you will be prompted for a location, search radius, and refresh interval. Subsequent runs reuse saved configuration and start the live radar display.
+First run: enter a location (e.g. `Dadar East Hindu Colony`), pick a geocoding result, set radius and refresh interval.
+
+Later runs reuse saved settings. Press **Ctrl+C** to exit.
 
 ```bash
-termradar --radius 25
-termradar --refresh 10
-termradar --location "Baner, Pune"
-termradar --reset-location
+termradar --location "Baner, Pune"   # temporary location (this run only)
+termradar --radius 25               # temporary radius (km)
+termradar --refresh 10              # temporary refresh interval (seconds)
+termradar --reset-location          # re-run setup and save new config
 termradar --help
 ```
 
-CLI overrides apply to the **current run only** and do not change saved configuration.
+Config is stored at `~/.config/termradar/config.toml` (Linux).
 
-Press **Ctrl+C** to exit cleanly.
-
-### Example output
-
-Representative terminal layout (actual styling uses Rich panels):
+## Example
 
 ```text
 ╭──────────────────── TERMRADAR ────────────────────╮
-│ Dadar, Mumbai                    LIVE ● 12:42:07   │
-│                                                    │
-│ RADAR                    NEAREST AIRCRAFT          │
-│      N                     6E221                   │
-│  .---+---.                 IndiGo                   │
-│  |   + ✈ |                 DEL → BOM               │
-│  '---+---+                 Distance: 4.2 km        │
-│      S                     Altitude: 8,350 ft      │
-│                                                    │
-│ 3 aircraft within 15 km | Refresh: 5 seconds       │
-╰────────────────────────────────────────────────────╯
+│ Hindu Colony, Mumbai              LIVE ● 12:42:07 │
+│                                                   │
+│  RADAR                   NEAREST AIRCRAFT         │
+│       N                    IGO6224                │
+│   ..... ✈ .....            Distance: 8.5 km       │
+│  W    +     E              Altitude: 12,400 ft   │
+│       S                                           │
+│                                                   │
+│ 3 aircraft within 15 km | Refresh: 5 seconds      │
+╰───────────────────────────────────────────────────╯
 ```
-
-## Configuration
-
-Config is stored at a platform-appropriate path (e.g. `~/.config/termradar/config.toml` on Linux):
-
-```toml
-[location]
-query = "Dadar, Mumbai"
-display_name = "Dadar, Mumbai, Maharashtra, India"
-latitude = 19.0178
-longitude = 72.8478
-
-[radar]
-radius_km = 15
-refresh_seconds = 5
-```
-
-User config is never committed to this repository.
 
 ## Architecture
 
 ```text
-GeocodingProvider
-        ↓
-     Location
-
-AircraftProvider
-        ↓
-   RadarEngine ◄──── RouteProvider
-        ↓
-   RadarSnapshot
-        ↓
- TerminalRenderer
+Geocoding → Location → RadarEngine ← RouteProvider → RadarSnapshot → TerminalRenderer
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
+Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
-## Development
+## Documentation
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for setup, testing, linting, and packaging commands.
+| Doc | Description |
+|-----|-------------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design and boundaries |
+| [ROADMAP.md](docs/ROADMAP.md) | Phases and future work |
+| [DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md) | APIs, limits, attribution |
+| [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Setup, tests, packaging |
 
-## Data providers
+## Data sources
 
-See [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md) for API details, attribution, and limits.
+- **Aircraft:** [OpenSky Network](https://opensky-network.org)
+- **Geocoding:** [OpenStreetMap](https://www.openstreetmap.org) / Nominatim
+- **Routes:** [adsb.lol](https://adsb.lol) (best-effort enrichment)
 
 ## License
 

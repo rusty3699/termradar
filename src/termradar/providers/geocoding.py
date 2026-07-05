@@ -13,7 +13,7 @@ from termradar.core.models import LocationCandidate
 logger = logging.getLogger(__name__)
 
 _DEFAULT_BASE_URL = "https://nominatim.openstreetmap.org/search"
-_DEFAULT_USER_AGENT = "TermRadar/0.1.0 (https://github.com/termradar/termradar)"
+_DEFAULT_USER_AGENT = "TermRadar/0.2.0 (https://github.com/rusty3699/termradar)"
 _DEFAULT_TIMEOUT = 10.0
 
 

@@ -1,6 +1,5 @@
 """Tests for radar coordinate mapping."""
 
-
 from termradar.renderers.radar_coords import radar_to_grid
 
 
