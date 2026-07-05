@@ -51,28 +51,30 @@ Use `TerminalRenderer.render_text()` for layout tests without brittle ANSI snaps
 
 ## Demo recording
 
-The README demo GIF is generated with [VHS](https://github.com/charmbracelet/vhs). VHS needs `ttyd`, `ffmpeg`, and Chromium on your `PATH`.
+README assets are generated with [VHS](https://github.com/charmbracelet/vhs). VHS needs `ttyd`, `ffmpeg`, and Chromium on your `PATH`.
+
+| Asset | Tape | What it shows |
+|-------|------|---------------|
+| `demo-quick.gif` | `docs/assets/demo-quick.tape` | Short live radar session (existing venv) |
+| `demo-setup.gif` | `docs/assets/demo-setup.tape` | Full install, deps, first-run setup, live radar |
+| `termradar.png` | — | Static screenshot (export from a live session) |
 
 ```bash
 # install VHS (see https://github.com/charmbracelet/vhs#installation)
 vhs docs/assets/demo-quick.tape
+vhs docs/assets/demo-setup.tape
 ```
 
-Source tape: `docs/assets/demo-quick.tape` → output: `docs/assets/demo-quick.gif`
+Regenerate GIFs after changing a tape, then commit the updated files.
 
-The README embeds the GIF with a relative path (`docs/assets/demo-quick.gif`) so it renders on GitHub.
-
-**Before publishing to PyPI**, switch the README image to an absolute URL (PyPI cannot resolve relative paths), for example:
+The README embeds images with absolute `raw.githubusercontent.com` URLs so they render on GitHub (public repo) and PyPI:
 
 ```markdown
-![TermRadar live demo](https://raw.githubusercontent.com/rusty3699/termradar/v0.3.1/docs/assets/demo-quick.gif)
+![TermRadar live demo](https://raw.githubusercontent.com/rusty3699/termradar/main/docs/assets/demo-quick.gif)
+![Install and first-run setup](https://raw.githubusercontent.com/rusty3699/termradar/main/docs/assets/demo-setup.gif)
 ```
 
-Use the release tag you publish. The repository must be **public** for the image to render on GitHub and PyPI.
-
-Regenerate the GIF after changing the tape, then commit the updated file.
-
-Edit the tape to change terminal size, typing speed, or how long the live UI stays on screen before exit.
+Edit a tape to change terminal size, typing speed, or how long the live UI stays on screen before exit. The setup tape uses a temp venv under `/tmp/termradar-demo-venv` and clears config under `/tmp/termradar-vhs-config`.
 
 ## Lint and format
 
@@ -86,7 +88,7 @@ ruff format --check src tests
 
 ```bash
 python -m build
-pip install dist/termradar-0.3.1-py3-none-any.whl
+pip install dist/termradar-0.3.2-py3-none-any.whl
 termradar --help
 termradar --version
 python -c "import termradar; print(termradar.__version__)"
