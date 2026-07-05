@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from rich import box
 from rich.console import Group, RenderableType
 from rich.panel import Panel
@@ -22,6 +20,7 @@ from termradar.renderers.formatting import (
 )
 from termradar.renderers.radar_canvas import build_radar_canvas
 from termradar.renderers.terminal_view import TerminalView
+from termradar.renderers.time_display import format_local_time
 
 _MIN_RADAR_WIDTH = 50
 _MIN_RADAR_HEIGHT = 18
@@ -74,7 +73,7 @@ class TerminalRenderer:
         return Text("\n".join(lines))
 
     def _build_header(self, view: TerminalView) -> Text:
-        time_str = _format_time(view.last_updated or datetime.now())
+        time_str = format_local_time(view.last_updated, view.timezone)
         status = "LIVE ●" if view.is_live else "DATA UNAVAILABLE"
         if view.is_stale:
             status = "STALE ●"
@@ -169,7 +168,7 @@ class TerminalRenderer:
             f"Refresh: {view.refresh_seconds} seconds",
         ]
         if view.last_updated and (view.aircraft_error or view.is_stale):
-            parts.append(f"Last update: {_format_time(view.last_updated)}")
+            parts.append(f"Last update: {format_local_time(view.last_updated, view.timezone)}")
         if view.aircraft_error and view.is_stale:
             parts.append("Retrying on next refresh")
         return " | ".join(parts)
@@ -178,12 +177,7 @@ class TerminalRenderer:
         return f"TERMRADAR — {view.location_name}"
 
     def _status_line(self, view: TerminalView) -> str:
+        updated = format_local_time(view.last_updated, view.timezone)
         if view.is_live:
-            return f"LIVE ● {_format_time(view.last_updated or datetime.now())}"
-        return f"DATA UNAVAILABLE — Last update: {_format_time(view.last_updated)}"
-
-
-def _format_time(value: datetime | None) -> str:
-    if value is None:
-        return "—"
-    return value.strftime("%H:%M:%S")
+            return f"LIVE ● {updated}"
+        return f"DATA UNAVAILABLE — Last update: {updated}"

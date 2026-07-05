@@ -17,6 +17,7 @@ from termradar.config.storage import (
     validate_refresh_seconds,
 )
 from termradar.core.engine import RadarEngine
+from termradar.core.location import ensure_location_timezone
 from termradar.core.models import Location
 from termradar.providers.aircraft import OpenSkyAircraftProvider
 from termradar.providers.geocoding import GeocodingError, NominatimGeocodingProvider
@@ -54,6 +55,8 @@ def main(argv: list[str] | None = None) -> int:
         if override is None:
             return 1
         location = override
+
+    location = ensure_location_timezone(location)
 
     try:
         radius_km = validate_radius_km(
@@ -176,11 +179,13 @@ def _run_onboarding(config: AppConfig, console: Console) -> AppConfig:
         )
         refresh_seconds = _DEFAULT_REFRESH_SECONDS
 
-    location = Location(
-        query=query,
-        display_name=selected.display_name,
-        latitude=selected.latitude,
-        longitude=selected.longitude,
+    location = ensure_location_timezone(
+        Location(
+            query=query,
+            display_name=selected.display_name,
+            latitude=selected.latitude,
+            longitude=selected.longitude,
+        )
     )
 
     config.location = location
@@ -214,11 +219,13 @@ def _resolve_location_override(query: str, console: Console) -> Location | None:
         if selected is None:
             return None
 
-    return Location(
-        query=query,
-        display_name=selected.display_name,
-        latitude=selected.latitude,
-        longitude=selected.longitude,
+    return ensure_location_timezone(
+        Location(
+            query=query,
+            display_name=selected.display_name,
+            latitude=selected.latitude,
+            longitude=selected.longitude,
+        )
     )
 
 

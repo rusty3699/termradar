@@ -10,6 +10,7 @@ from pathlib import Path
 import tomli_w
 from platformdirs import user_config_dir
 
+from termradar.core.location import ensure_location_timezone
 from termradar.core.models import Location
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,8 @@ def save_config(config: AppConfig, path: Path | None = None) -> None:
             "latitude": config.location.latitude,
             "longitude": config.location.longitude,
         }
+        if config.location.timezone:
+            data["location"]["timezone"] = config.location.timezone
 
     with path.open("wb") as fh:
         tomli_w.dump(data, fh)
@@ -127,12 +130,17 @@ def _parse_location(data: object) -> Location | None:
     if not (-180.0 <= longitude <= 180.0):
         raise ConfigError(f"Invalid longitude: {longitude}")
 
-    return Location(
+    timezone = data.get("timezone")
+    timezone_str = str(timezone).strip() if timezone else None
+
+    location = Location(
         query=query,
         display_name=display_name,
         latitude=latitude,
         longitude=longitude,
+        timezone=timezone_str,
     )
+    return ensure_location_timezone(location)
 
 
 def _parse_radar(data: object) -> RadarSettings:

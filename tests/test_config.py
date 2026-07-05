@@ -32,6 +32,7 @@ def test_save_and_load_roundtrip(tmp_path: Path):
             display_name="Dadar, Mumbai, Maharashtra, India",
             latitude=19.0178,
             longitude=72.8478,
+            timezone="Asia/Kolkata",
         ),
         radar=RadarSettings(radius_km=20.0, refresh_seconds=10),
     )
@@ -39,6 +40,7 @@ def test_save_and_load_roundtrip(tmp_path: Path):
     loaded = load_config(path)
     assert loaded.location is not None
     assert loaded.location.latitude == pytest.approx(19.0178)
+    assert loaded.location.timezone == "Asia/Kolkata"
     assert loaded.radar.radius_km == 20.0
     assert loaded.radar.refresh_seconds == 10
 

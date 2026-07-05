@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Location-based local time display using IANA timezone resolved from radar coordinates
+- Optional `timezone` field persisted in config (e.g. `Asia/Kolkata` for Mumbai)
+
+### Dependencies
+
+- Added `timezonefinder` for coordinate → timezone lookup
+
 ## [0.2.0] - 2026-07-05
 
 ### Added

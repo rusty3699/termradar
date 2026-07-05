@@ -14,6 +14,7 @@ class Location:
     display_name: str
     latitude: float
     longitude: float
+    timezone: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

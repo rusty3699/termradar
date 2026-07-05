@@ -105,11 +105,17 @@ class RadarSession:
             if snapshot is not None
             else self._engine.location.display_name
         )
+        timezone = (
+            snapshot.location.timezone
+            if snapshot is not None
+            else self._engine.location.timezone
+        )
         radius_km = snapshot.radius_km if snapshot is not None else self._engine.radius_km
         return TerminalView(
             location_name=location_name,
             radius_km=radius_km,
             refresh_seconds=self._refresh_seconds,
+            timezone=timezone,
             snapshot=snapshot,
             aircraft_error=error,
             last_updated=self._last_updated,

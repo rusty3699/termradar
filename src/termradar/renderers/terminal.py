@@ -22,5 +22,6 @@ def render_snapshot(snapshot: RadarSnapshot) -> str:
         refresh_seconds=5,
         snapshot=snapshot,
         last_updated=snapshot.scanned_at,
+        timezone=snapshot.location.timezone,
     )
     return renderer.render_text(view)
