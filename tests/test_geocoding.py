@@ -24,7 +24,10 @@ def test_geocoding_one_result():
             ],
         )
 
-    provider = NominatimGeocodingProvider(client=_mock_client(handler))
+    provider = NominatimGeocodingProvider(
+        client=_mock_client(handler),
+        min_interval_seconds=0,
+    )
     results = provider.search("Baner, Pune")
     assert len(results) == 1
     assert results[0].display_name == "Baner, Pune, Maharashtra, India"
@@ -42,7 +45,10 @@ def test_geocoding_multiple_results():
             ],
         )
 
-    provider = NominatimGeocodingProvider(client=_mock_client(handler))
+    provider = NominatimGeocodingProvider(
+        client=_mock_client(handler),
+        min_interval_seconds=0,
+    )
     results = provider.search("Mumbai")
     assert len(results) == 2
 
@@ -51,7 +57,10 @@ def test_geocoding_no_results():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=[])
 
-    provider = NominatimGeocodingProvider(client=_mock_client(handler))
+    provider = NominatimGeocodingProvider(
+        client=_mock_client(handler),
+        min_interval_seconds=0,
+    )
     results = provider.search("Nowhereville XYZ")
     assert results == []
 
@@ -60,7 +69,10 @@ def test_geocoding_malformed_response():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"error": "not a list"})
 
-    provider = NominatimGeocodingProvider(client=_mock_client(handler))
+    provider = NominatimGeocodingProvider(
+        client=_mock_client(handler),
+        min_interval_seconds=0,
+    )
     with pytest.raises(GeocodingError):
         provider.search("Mumbai")
 
@@ -69,7 +81,10 @@ def test_geocoding_timeout():
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("timed out", request=request)
 
-    provider = NominatimGeocodingProvider(client=_mock_client(handler))
+    provider = NominatimGeocodingProvider(
+        client=_mock_client(handler),
+        min_interval_seconds=0,
+    )
     with pytest.raises(GeocodingError, match="timed out"):
         provider.search("Mumbai")
 
@@ -78,7 +93,10 @@ def test_geocoding_http_error():
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(503, json=[])
 
-    provider = NominatimGeocodingProvider(client=_mock_client(handler))
+    provider = NominatimGeocodingProvider(
+        client=_mock_client(handler),
+        min_interval_seconds=0,
+    )
     with pytest.raises(GeocodingError, match="503"):
         provider.search("Mumbai")
 
@@ -90,6 +108,9 @@ def test_geocoding_sends_user_agent():
         seen["ua"] = request.headers.get("User-Agent", "")
         return httpx.Response(200, json=[])
 
-    provider = NominatimGeocodingProvider(client=_mock_client(handler))
+    provider = NominatimGeocodingProvider(
+        client=_mock_client(handler),
+        min_interval_seconds=0,
+    )
     provider.search("Pune")
     assert "TermRadar" in seen["ua"]

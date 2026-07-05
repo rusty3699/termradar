@@ -30,6 +30,7 @@ def test_format_callsign_present():
 def test_format_missing_altitude_and_speed():
     ac = _aircraft(altitude_ft=None, ground_speed_knots=None)
     assert format_altitude_ft(ac.altitude_ft) == "—"
+    assert format_altitude_ft(-175.0) == "ground"
     assert format_speed_knots(ac.ground_speed_knots) == "—"
 
 
@@ -43,7 +44,14 @@ def test_format_route_present():
 
 
 def test_format_airline_unknown():
-    assert format_airline(_aircraft()) == "Airline unknown"
+    assert format_airline(_aircraft()) == "Unknown airline"
+
+
+def test_format_airline_shortens_common_suffixes():
+    ac = _aircraft(airline="IndiGo Airlines")
+    assert format_airline(ac) == "IndiGo"
+    ac = _aircraft(airline="British Airways")
+    assert format_airline(ac) == "British Airways"
 
 
 def test_format_table_row():

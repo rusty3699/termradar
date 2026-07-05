@@ -3,7 +3,12 @@
 import httpx
 import pytest
 
-from termradar.providers.aircraft import AircraftProviderError, OpenSkyAircraftProvider
+from termradar.providers.aircraft import (
+    AdsbLolAircraftProvider,
+    AircraftProviderError,
+    OpenSkyAircraftProvider,
+    _radius_km_to_nm,
+)
 
 
 def _mock_client(handler):
@@ -107,3 +112,74 @@ def test_http_error():
     provider = OpenSkyAircraftProvider(client=_mock_client(handler))
     with pytest.raises(AircraftProviderError, match="500"):
         provider.get_nearby(19.0, 72.8, 50.0)
+
+
+def _adsb_lol_item(**overrides):
+    item = {
+        "hex": "80161a",
+        "type": "adsb_icao",
+        "flight": "IGO251V ",
+        "r": "VT-ABC",
+        "t": "A320",
+        "alt_baro": 1925,
+        "gs": 136.0,
+        "track": 72.5,
+        "lat": 19.02,
+        "lon": 72.85,
+    }
+    item.update(overrides)
+    return item
+
+
+def test_adsb_lol_parse_full_item():
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/6")
+        return httpx.Response(200, json={"ac": [_adsb_lol_item()], "total": 1})
+
+    provider = AdsbLolAircraftProvider(client=_mock_client(handler))
+    aircraft = provider.get_nearby(19.0, 72.8, 10.0)
+    assert len(aircraft) == 1
+    ac = aircraft[0]
+    assert ac.hex_id == "80161a"
+    assert ac.callsign == "IGO251V"
+    assert ac.altitude_ft == pytest.approx(1925.0)
+    assert ac.ground_speed_knots == pytest.approx(136.0)
+    assert ac.track_deg == pytest.approx(72.5)
+    assert ac.registration == "VT-ABC"
+    assert ac.aircraft_type == "A320"
+
+
+def test_adsb_lol_masks_privacy_callsign_and_ground_altitude():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={"ac": [_adsb_lol_item(flight="@@@@@@@@", alt_baro="ground", gs=0.5)]},
+        )
+
+    provider = AdsbLolAircraftProvider(client=_mock_client(handler))
+    ac = provider.get_nearby(19.0, 72.8, 10.0)[0]
+    assert ac.callsign is None
+    assert ac.altitude_ft is None
+
+
+def test_adsb_lol_empty_response():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"ac": [], "total": 0})
+
+    provider = AdsbLolAircraftProvider(client=_mock_client(handler))
+    assert provider.get_nearby(19.0, 72.8, 10.0) == []
+
+
+def test_adsb_lol_http_error():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, json={})
+
+    provider = AdsbLolAircraftProvider(client=_mock_client(handler))
+    with pytest.raises(AircraftProviderError, match="429"):
+        provider.get_nearby(19.0, 72.8, 10.0)
+
+
+def test_radius_km_to_nm():
+    assert _radius_km_to_nm(10.0) == 6
+    assert _radius_km_to_nm(1.0) == 1
+    assert _radius_km_to_nm(500.0) == 250

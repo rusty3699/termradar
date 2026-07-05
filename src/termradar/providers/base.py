@@ -31,6 +31,6 @@ class AircraftProvider(Protocol):
 class RouteProvider(Protocol):
     """Look up route metadata for a flight callsign."""
 
-    def lookup_route(self, callsign: str) -> RouteInfo | None:
+    def lookup_route(self, callsign: str, *, hex_id: str | None = None) -> RouteInfo | None:
         """Return route info for *callsign*, or ``None`` if unknown."""
         ...

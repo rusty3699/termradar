@@ -9,8 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Location-based local time display using IANA timezone resolved from radar coordinates
-- Optional `timezone` field persisted in config (e.g. `Asia/Kolkata` for Mumbai)
+- adsb.lol v2 as default live aircraft provider (`--aircraft-provider opensky` for OpenSky)
+- ADSBDB enrichment for routes and airlines (replaces adsb.lol routeset in CLI)
+- ICAO callsign prefix airline inference when enrichment has no airline
+- Top-five nearby aircraft list with numbered radar markers (`1`–`5`)
+- Rate limits: 3 s min / 5 s default refresh, 30 ADSBDB req/min, enrichment TTL cache
+- Nominatim 1 req/s throttle; legacy `refresh_seconds < 3` auto-upgraded on load
+- Local time display via `timezonefinder` and optional `timezone` in config
+
+### Changed
+
+- Right panel: **CLOSEST** detail + **NEARBY** compact list (title: NEARBY AIRCRAFT)
+- Radar marker collision handling (offsets when on ring dots or overlapping)
+- Airline display shortens trailing ` Airlines` / ` Air Lines`
+- Documentation overhaul for providers, rate limits, and usage
+
+### Fixed
+
+- OpenSky HTTP 429 at 1 s refresh (adsb.lol default + minimum 3 s refresh)
+- ADSBDB HTTP 404 logged as debug, not terminal warning
+- Aircraft markers skipped on ring dots
 
 ### Dependencies
 

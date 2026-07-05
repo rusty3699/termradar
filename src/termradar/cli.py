@@ -7,6 +7,7 @@ from contextlib import suppress
 
 from rich.console import Console
 
+from termradar import __version__
 from termradar.config.storage import (
     AppConfig,
     ConfigError,
@@ -17,16 +18,18 @@ from termradar.config.storage import (
     validate_refresh_seconds,
 )
 from termradar.core.engine import RadarEngine
+from termradar.core.limits import ENRICHMENT_MAX_BURST, LIVE_REFRESH_DEFAULT_SECONDS
 from termradar.core.location import ensure_location_timezone
 from termradar.core.models import Location
-from termradar.providers.aircraft import OpenSkyAircraftProvider
+from termradar.providers.adsbdb import AdsbDbRouteProvider
+from termradar.providers.aircraft import AdsbLolAircraftProvider, OpenSkyAircraftProvider
 from termradar.providers.geocoding import GeocodingError, NominatimGeocodingProvider
-from termradar.providers.routes import AdsbLolRouteProvider, CachedRouteProvider
+from termradar.providers.routes import CachedRouteProvider
 from termradar.session import RadarSession
 
 _DEFAULT_RADIUS_KM = 15.0
-_DEFAULT_REFRESH_SECONDS = 5
-_DEFAULT_ENRICHMENT_LIMIT = 10
+_DEFAULT_REFRESH_SECONDS = LIVE_REFRESH_DEFAULT_SECONDS
+_DEFAULT_ENRICHMENT_LIMIT = ENRICHMENT_MAX_BURST
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,7 +41,10 @@ def main(argv: list[str] | None = None) -> int:
         config = load_config()
     except ConfigError as exc:
         console.print(f"[red]Config error:[/red] {exc}")
-        console.print("Run [bold]termradar --reset-location[/bold] to reconfigure.")
+        console.print(
+            "Fix your config or run [bold]termradar --refresh 5[/bold] "
+            "or [bold]termradar --reset-location[/bold]."
+        )
         return 1
 
     if args.reset_location or config.location is None:
@@ -69,9 +75,10 @@ def main(argv: list[str] | None = None) -> int:
         console.print(f"[red]{exc}[/red]")
         return 1
 
-    route_provider = CachedRouteProvider(AdsbLolRouteProvider())
+    route_provider = CachedRouteProvider(AdsbDbRouteProvider())
+    aircraft_provider = _create_aircraft_provider(args.aircraft_provider)
     engine = RadarEngine(
-        aircraft_provider=OpenSkyAircraftProvider(),
+        aircraft_provider=aircraft_provider,
         route_provider=route_provider,
         location=location,
         radius_km=radius_km,
@@ -91,7 +98,12 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         prog="termradar",
         description="Live aircraft radar for your terminal.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="See what's flying above you.",
+        epilog="See what's flying above you.\n\nMade with <3 Anish",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__} — Made with <3 Anish",
     )
     parser.add_argument(
         "--location",
@@ -123,11 +135,23 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="Maximum nearest aircraft to enrich with route data",
     )
     parser.add_argument(
+        "--aircraft-provider",
+        choices=("adsblol", "opensky"),
+        default="adsblol",
+        help="Aircraft data source (default: adsblol)",
+    )
+    parser.add_argument(
         "--reset-location",
         action="store_true",
         help="Re-run location onboarding and update saved config",
     )
     return parser.parse_args(argv)
+
+
+def _create_aircraft_provider(name: str):
+    if name == "opensky":
+        return OpenSkyAircraftProvider()
+    return AdsbLolAircraftProvider()
 
 
 def _run_onboarding(config: AppConfig, console: Console) -> AppConfig:

@@ -16,6 +16,12 @@ def test_help_flag():
     assert exc.value.code == 0
 
 
+def test_version_flag():
+    with pytest.raises(SystemExit) as exc:
+        _parse_args(["--version"])
+    assert exc.value.code == 0
+
+
 def test_location_override_flag():
     args = _parse_args(["--location", "Baner, Pune"])
     assert args.location == "Baner, Pune"
@@ -49,3 +55,5 @@ def test_invalid_zero_radius():
 def test_invalid_refresh_interval():
     with pytest.raises(ConfigError):
         validate_refresh_seconds(0)
+    with pytest.raises(ConfigError, match="at least 3 seconds"):
+        validate_refresh_seconds(1)

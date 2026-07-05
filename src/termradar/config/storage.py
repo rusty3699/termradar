@@ -10,6 +10,11 @@ from pathlib import Path
 import tomli_w
 from platformdirs import user_config_dir
 
+from termradar.core.limits import (
+    LIVE_REFRESH_DEFAULT_SECONDS,
+    LIVE_REFRESH_MAX_SECONDS,
+    LIVE_REFRESH_MIN_SECONDS,
+)
 from termradar.core.location import ensure_location_timezone
 from termradar.core.models import Location
 
@@ -17,11 +22,11 @@ logger = logging.getLogger(__name__)
 
 _APP_NAME = "termradar"
 _DEFAULT_RADIUS_KM = 15.0
-_DEFAULT_REFRESH_SECONDS = 5
+_DEFAULT_REFRESH_SECONDS = LIVE_REFRESH_DEFAULT_SECONDS
 _MIN_RADIUS_KM = 1.0
 _MAX_RADIUS_KM = 250.0
-_MIN_REFRESH_SECONDS = 1
-_MAX_REFRESH_SECONDS = 300
+_MIN_REFRESH_SECONDS = LIVE_REFRESH_MIN_SECONDS
+_MAX_REFRESH_SECONDS = LIVE_REFRESH_MAX_SECONDS
 
 
 class ConfigError(Exception):
@@ -63,7 +68,9 @@ def load_config(path: Path | None = None) -> AppConfig:
 
     location = _parse_location(data.get("location"))
     radar = _parse_radar(data.get("radar"))
-    return AppConfig(location=location, radar=radar)
+    config = AppConfig(location=location, radar=radar)
+    _migrate_legacy_refresh(path, data, config)
+    return config
 
 
 def save_config(config: AppConfig, path: Path | None = None) -> None:
@@ -103,12 +110,27 @@ def validate_radius_km(value: float) -> float:
 
 def validate_refresh_seconds(value: int) -> int:
     """Validate and return a refresh interval in seconds."""
-    if not (_MIN_REFRESH_SECONDS <= value <= _MAX_REFRESH_SECONDS):
+    if value < _MIN_REFRESH_SECONDS:
+        raise ConfigError(f"refresh interval must be at least {_MIN_REFRESH_SECONDS} seconds.")
+    if value > _MAX_REFRESH_SECONDS:
         raise ConfigError(
             f"refresh_seconds must be between {_MIN_REFRESH_SECONDS} "
             f"and {_MAX_REFRESH_SECONDS}, got {value}"
         )
     return value
+
+
+def _migrate_legacy_refresh(path: Path, data: dict, config: AppConfig) -> None:
+    """Persist an upgraded refresh interval when an old config used a value below the minimum."""
+    radar_data = data.get("radar")
+    if not isinstance(radar_data, dict) or "refresh_seconds" not in radar_data:
+        return
+    try:
+        saved = int(radar_data["refresh_seconds"])
+    except (TypeError, ValueError):
+        return
+    if saved < _MIN_REFRESH_SECONDS:
+        save_config(config, path)
 
 
 def _parse_location(data: object) -> Location | None:
@@ -160,8 +182,26 @@ def _parse_radar(data: object) -> RadarSettings:
 
     if "refresh_seconds" in data:
         try:
-            refresh = validate_refresh_seconds(int(data["refresh_seconds"]))
+            refresh = _coerce_refresh_seconds(int(data["refresh_seconds"]))
         except (TypeError, ValueError) as exc:
             raise ConfigError("Invalid refresh_seconds in [radar]") from exc
 
     return RadarSettings(radius_km=radius, refresh_seconds=refresh)
+
+
+def _coerce_refresh_seconds(value: int) -> int:
+    """Load saved refresh values, upgrading legacy intervals below the minimum."""
+    if value < _MIN_REFRESH_SECONDS:
+        logger.warning(
+            "Saved refresh_seconds=%s is below the minimum %s; using %s instead",
+            value,
+            _MIN_REFRESH_SECONDS,
+            _DEFAULT_REFRESH_SECONDS,
+        )
+        return _DEFAULT_REFRESH_SECONDS
+    if value > _MAX_REFRESH_SECONDS:
+        raise ConfigError(
+            f"refresh_seconds must be between {_MIN_REFRESH_SECONDS} "
+            f"and {_MAX_REFRESH_SECONDS}, got {value}"
+        )
+    return value

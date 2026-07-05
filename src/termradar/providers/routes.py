@@ -1,13 +1,22 @@
-"""Route enrichment provider with in-memory cache."""
+"""Route enrichment providers and rate-limited cache."""
 
 from __future__ import annotations
 
 import logging
+import time
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 import httpx
 
+from termradar.core.limits import (
+    ENRICHMENT_FAILURE_TTL_SECONDS,
+    ENRICHMENT_REQUESTS_PER_MINUTE,
+    ENRICHMENT_SUCCESS_TTL_SECONDS,
+)
 from termradar.core.models import RouteInfo
+from termradar.core.rate_limit import MinuteRateLimiter
 
 logger = logging.getLogger(__name__)
 
@@ -15,25 +24,59 @@ _DEFAULT_BASE_URL = "https://api.adsb.lol/api/0/routeset"
 _DEFAULT_TIMEOUT = 10.0
 
 
+@dataclass(slots=True)
+class _CacheEntry:
+    result: RouteInfo | None
+    expires_at: float
+
+
 class CachedRouteProvider:
-    """Wrap a route provider with an in-memory callsign cache."""
+    """Wrap a route provider with TTL cache and enrichment rate limits."""
 
-    def __init__(self, provider: RouteLookup) -> None:
+    def __init__(
+        self,
+        provider: RouteLookup,
+        *,
+        requests_per_minute: int = ENRICHMENT_REQUESTS_PER_MINUTE,
+        success_ttl_seconds: float = ENRICHMENT_SUCCESS_TTL_SECONDS,
+        failure_ttl_seconds: float = ENRICHMENT_FAILURE_TTL_SECONDS,
+        clock: Callable[[], float] = time.monotonic,
+        rate_limiter: MinuteRateLimiter | None = None,
+    ) -> None:
         self._provider = provider
-        self._cache: dict[str, RouteInfo | None] = {}
+        self._success_ttl_seconds = success_ttl_seconds
+        self._failure_ttl_seconds = failure_ttl_seconds
+        self._clock = clock
+        self._cache: dict[str, _CacheEntry] = {}
+        self._rate_limiter = rate_limiter or MinuteRateLimiter(
+            requests_per_minute,
+            clock=clock,
+        )
 
-    def lookup_route(self, callsign: str) -> RouteInfo | None:
+    def lookup_route(self, callsign: str, *, hex_id: str | None = None) -> RouteInfo | None:
         key = callsign.strip().upper()
         if not key:
             return None
-        if key in self._cache:
-            return self._cache[key]
+
+        cached = self._cache.get(key)
+        if cached is not None and cached.expires_at > self._clock():
+            return cached.result
+
+        if not self._rate_limiter.allow():
+            logger.debug("Enrichment rate limit reached; skipping %s", key)
+            return None
+
         try:
-            result = self._provider.lookup_route(key)
+            result = self._provider.lookup_route(key, hex_id=hex_id)
         except Exception:
             logger.exception("Route lookup failed for %s", key)
             result = None
-        self._cache[key] = result
+
+        ttl = self._success_ttl_seconds if result is not None else self._failure_ttl_seconds
+        self._cache[key] = _CacheEntry(
+            result=result,
+            expires_at=self._clock() + ttl,
+        )
         return result
 
     def clear(self) -> None:
@@ -47,7 +90,7 @@ class CachedRouteProvider:
 class RouteLookup:
     """Protocol-like base for route lookup implementations."""
 
-    def lookup_route(self, callsign: str) -> RouteInfo | None:
+    def lookup_route(self, callsign: str, *, hex_id: str | None = None) -> RouteInfo | None:
         raise NotImplementedError
 
 
@@ -66,7 +109,7 @@ class AdsbLolRouteProvider(RouteLookup):
         self._client = client
         self._owns_client = client is None
 
-    def lookup_route(self, callsign: str) -> RouteInfo | None:
+    def lookup_route(self, callsign: str, *, hex_id: str | None = None) -> RouteInfo | None:
         callsign = callsign.strip().upper()
         if not callsign:
             return None

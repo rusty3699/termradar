@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import replace
 
+from termradar.core.airline import infer_airline_from_callsign
 from termradar.core.bearing import bearing_deg
 from termradar.core.distance import distance_km
 from termradar.core.models import Aircraft, Location, RadarSnapshot
@@ -116,18 +117,38 @@ class RadarEngine:
 
     def _enrich_one(self, aircraft: Aircraft) -> Aircraft:
         assert aircraft.callsign is not None
+        origin = aircraft.origin
+        destination = aircraft.destination
+        airline = aircraft.airline
+
         try:
-            route = self._route_provider.lookup_route(aircraft.callsign)
+            route = self._route_provider.lookup_route(
+                aircraft.callsign,
+                hex_id=aircraft.hex_id,
+            )
         except Exception:
             logger.exception("Route enrichment failed for %s", aircraft.callsign)
-            return aircraft
+            route = None
 
-        if route is None:
+        if route is not None:
+            origin = route.origin or origin
+            destination = route.destination or destination
+            airline = route.airline or airline
+
+        if not airline:
+            airline = infer_airline_from_callsign(aircraft.callsign)
+
+        unchanged = (
+            origin == aircraft.origin
+            and destination == aircraft.destination
+            and airline == aircraft.airline
+        )
+        if unchanged:
             return aircraft
 
         return replace(
             aircraft,
-            origin=route.origin or aircraft.origin,
-            destination=route.destination or aircraft.destination,
-            airline=route.airline or aircraft.airline,
+            origin=origin,
+            destination=destination,
+            airline=airline,
         )

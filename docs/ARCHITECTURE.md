@@ -2,94 +2,146 @@
 
 > **One radar engine. Multiple displays.**
 
-Renderers consume `RadarSnapshot`. They never fetch aircraft data, geocode, enrich routes, or compute distance/bearing.
+The core produces a `RadarSnapshot` on each scan. Renderers draw it; they never fetch data or call external APIs.
 
 ## Data flow
 
 ```text
-GeocodingProvider          (setup only)
+GeocodingProvider          (setup / location override only)
         ↓
-     Location
+     Location  (+ timezone)
         ↓
-AircraftProvider
+AircraftProvider           (every scan — default: adsb.lol)
         ↓
-   RadarEngine  ◄──── RouteProvider
+   RadarEngine  ◄──── CachedRouteProvider ──► AdsbDbRouteProvider
         ↓
    RadarSnapshot
         ↓
-   Renderer layer
+   RadarSession  →  TerminalView  →  TerminalRenderer
         ↓
-   Terminal output
+   Terminal output (Rich live UI)
 ```
 
-A future `FullscreenRenderer` (Phase 3) will consume the same `RadarSnapshot`.
+A future `FullscreenRenderer` (Phase 3, Raspberry Pi) will consume the same `RadarSnapshot`.
 
 ## Scan pipeline
 
 ```text
 RadarEngine.scan()
-  → fetch aircraft (provider)
-  → distance_km() + bearing_deg()
+  → fetch aircraft (AdsblolAircraftProvider by default)
+  → distance_km() + bearing_deg() from radar center
   → filter by radius, sort nearest-first
-  → enrich routes (cached, limited count)
+  → enrich nearest N aircraft (ADSBDB, cached, rate-limited)
+  → infer airline from ICAO callsign prefix when still unknown
   → RadarSnapshot
 ```
 
-Geocoding runs only during onboarding, `--reset-location`, or `--location` override — not on refresh.
+Geocoding and timezone resolution run only during onboarding, `--reset-location`, or `--location` — **not** on refresh.
 
 ## Live display loop
 
 ```text
 RadarSession
   → engine.scan()
-  → TerminalView
+  → build TerminalView (location, snapshot, errors, terminal size)
   → TerminalRenderer.render()
-  → sleep(refresh_seconds)
+  → sleep(refresh_seconds)    # default 5 s, minimum 3 s
 ```
 
-`RadarSession` owns the refresh loop. `TerminalRenderer` is stateless per frame.
+`RadarSession` owns the loop and keeps the last good snapshot when a scan fails (stale mode). `TerminalRenderer` is stateless per frame.
+
+## Terminal UI layout
+
+Wide terminals (≥ 72 columns): radar panel left, aircraft panel right.
+
+**Radar panel**
+
+| Symbol | Meaning |
+|--------|---------|
+| `+` | Your location (radar center) |
+| Outer dotted ring | Search radius |
+| Inner dotted ring | Half of search radius |
+| `1`–`5` | Top five nearest aircraft (matches nearby list) |
+| `✈` | Other aircraft in range |
+| `N` `E` `S` `W` | Compass |
+
+Markers use collision offsets when the ideal grid cell is occupied (ring dot, center, or another marker).
+
+**Nearby aircraft panel**
+
+- **CLOSEST** — full detail for nearest aircraft (callsign, airline, route, distance, bearing, speed, altitude)
+- **NEARBY** — compact top-five list: rank, callsign, distance, compass direction
+
+Narrow terminals fall back to a compact aircraft table.
 
 ## Package layout
 
 ```text
 src/termradar/
-├── cli.py                 # CLI and onboarding
-├── session.py             # Live refresh orchestration
-├── core/                  # Models, engine, geometry
-├── providers/             # Geocoding, aircraft, routes
-├── config/                # TOML persistence
+├── cli.py                     # Entry point, onboarding, provider wiring
+├── session.py                 # Live refresh loop
+├── core/
+│   ├── engine.py              # Scan orchestration
+│   ├── models.py              # Location, Aircraft, RadarSnapshot, …
+│   ├── limits.py              # Rate-limit constants
+│   ├── rate_limit.py          # Rolling minute limiter
+│   ├── airline.py             # ICAO prefix → airline inference
+│   ├── distance.py / bearing.py
+│   ├── location.py / timezone.py
+│   └── …
+├── providers/
+│   ├── geocoding.py           # Nominatim
+│   ├── aircraft.py            # adsb.lol + OpenSky
+│   ├── adsbdb.py              # ADSBDB enrichment
+│   └── routes.py              # CachedRouteProvider, adsb.lol routeset
+├── config/storage.py          # TOML load/save, validation
 └── renderers/
-    ├── formatting.py      # Display formatters
-    ├── radar_coords.py    # Polar → grid mapping
-    ├── radar_canvas.py    # ASCII radar
-    ├── terminal_ui.py     # Rich layout
-    └── terminal_view.py   # Per-frame view model
+    ├── formatting.py          # Display strings
+    ├── bearing_display.py     # Compass labels
+    ├── location_display.py    # Short location header
+    ├── radar_coords.py        # Polar → grid
+    ├── radar_canvas.py        # ASCII radar + markers
+    ├── terminal_ui.py         # Rich layout
+    ├── terminal_view.py       # Per-frame view model
+    └── time_display.py        # Local time in location timezone
 ```
 
 ## Boundaries
 
 | Layer | Does | Does not |
 |-------|------|----------|
-| Providers | HTTP, parsing, unit conversion | Display logic |
-| `RadarEngine` | Fetch, geometry, filter, sort, enrich | Terminal drawing |
-| `TerminalRenderer` | Layout, radar plot, formatting | API calls, Haversine |
-| `radar_to_grid()` | Map bearing/distance to grid cells | Filter or sort aircraft |
+| Providers | HTTP, parsing, caching, rate limiting | Display, geometry |
+| `RadarEngine` | Fetch, filter, sort, enrich | Terminal drawing |
+| `CachedRouteProvider` | TTL cache + 30/min cap | Aircraft positions |
+| `TerminalRenderer` | Layout, radar, formatting | API calls |
+| `radar_to_grid()` | Bearing/distance → grid cell | Fetch or enrich |
 
 ## Error handling
 
 | Failure | Behaviour |
 |---------|-----------|
-| Aircraft provider down | Error UI; keep last snapshot as stale if available |
-| Route lookup fails | Aircraft shown without route fields |
-| Missing metadata | Graceful fallbacks (`—`, `Unknown`) |
+| Aircraft provider down | Error state; last snapshot shown as stale if available |
+| ADSBDB miss / 404 | Aircraft shown; airline may come from callsign prefix |
+| Enrichment rate limit | Skip remaining lookups this scan; retry later |
+| Missing altitude / route | Graceful fallbacks (`—`, `Unknown airline`, `Route unavailable`) |
 | Ctrl+C | Clean exit |
 
 ## Configuration
 
-```text
-first run / --reset-location  →  save config.toml
-termradar                     →  load config, start session
---location / --radius / --refresh  →  override for current run only
-```
+Stored at `~/.config/termradar/config.toml` (platformdirs).
 
-Route cache is in-memory for the CLI process lifetime. Enrichment is capped by `enrichment_limit` (default 10).
+| Key | Default | Notes |
+|-----|---------|-------|
+| `location.*` | — | Set during onboarding |
+| `radar.radius_km` | 15 | 1–250 km |
+| `radar.refresh_seconds` | 5 | 3–300; values &lt; 3 upgraded on load |
+
+CLI overrides (`--location`, `--radius`, `--refresh`, `--aircraft-provider`, `--enrichment-limit`) apply to the current run only unless `--reset-location` re-saves config.
+
+## Rate limits
+
+See [DATA_PROVIDERS.md](DATA_PROVIDERS.md) for full detail. Summary:
+
+- **Refresh:** 5 s default, 3 s minimum → one adsb.lol request per cycle
+- **Enrichment:** 30 ADSBDB requests/minute max, 10 nearest aircraft per scan, 12 h / 30 min cache
+- **Geocoding:** 1 Nominatim request/second, setup only

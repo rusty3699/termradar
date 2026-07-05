@@ -25,6 +25,8 @@ def format_distance_km(distance_km: float | None) -> str:
 def format_altitude_ft(altitude_ft: float | None) -> str:
     if altitude_ft is None:
         return _MISSING
+    if altitude_ft < 0:
+        return "ground"
     return f"{altitude_ft:,.0f} ft"
 
 
@@ -50,8 +52,15 @@ def format_route(ac: Aircraft) -> str:
 
 def format_airline(ac: Aircraft) -> str:
     if ac.airline and ac.airline.strip():
-        return ac.airline.strip()
-    return "Airline unknown"
+        return _shorten_airline_name(ac.airline.strip())
+    return "Unknown airline"
+
+
+def _shorten_airline_name(name: str) -> str:
+    for suffix in (" Airlines", " Air Lines"):
+        if name.endswith(suffix):
+            return name[: -len(suffix)]
+    return name
 
 
 def format_table_row(ac: Aircraft) -> tuple[str, str, str, str, str]:

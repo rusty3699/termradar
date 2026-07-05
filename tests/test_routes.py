@@ -131,13 +131,25 @@ def test_route_lookup_accepts_http_201():
     assert route.origin == "BOM"
 
 
-def test_cached_route_provider_caches_none():
+def test_cached_route_provider_rate_limited_without_network_call():
+    call_count = 0
+
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json=[])
+        nonlocal call_count
+        call_count += 1
+        return httpx.Response(
+            200,
+            json=[{"callsign": "IGO123", "_airport_codes_iata": "BOM-DEL"}],
+        )
 
     inner = AdsbLolRouteProvider(client=_mock_client(handler))
-    cached = CachedRouteProvider(inner)
+    clock = {"now": 0.0}
+    cached = CachedRouteProvider(
+        inner,
+        requests_per_minute=1,
+        clock=lambda: clock["now"],
+    )
 
-    assert cached.lookup_route("NOPE") is None
-    assert cached.lookup_route("NOPE") is None
-    assert cached.size == 1
+    assert cached.lookup_route("IGO123") is not None
+    assert cached.lookup_route("IGO456") is None
+    assert call_count == 1

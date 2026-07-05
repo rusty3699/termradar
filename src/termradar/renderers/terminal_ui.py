@@ -8,22 +8,24 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
+from termradar.renderers.bearing_display import bearing_to_compass, format_bearing_compass
 from termradar.renderers.formatting import (
     format_airline,
     format_altitude_ft,
-    format_bearing_deg,
     format_callsign,
     format_distance_km,
     format_route,
     format_speed_knots,
     format_table_row,
 )
+from termradar.renderers.location_display import shorten_location_name
 from termradar.renderers.radar_canvas import build_radar_canvas
 from termradar.renderers.terminal_view import TerminalView
 from termradar.renderers.time_display import format_local_time
 
 _MIN_RADAR_WIDTH = 50
 _MIN_RADAR_HEIGHT = 18
+_NEARBY_LIST_SIZE = 5
 
 
 class TerminalRenderer:
@@ -42,13 +44,16 @@ class TerminalRenderer:
         console.print(self.render(view))
         return console.export_text()
 
+    def _display_location(self, view: TerminalView) -> str:
+        return shorten_location_name(view.location_name, view.location_query)
+
     def _full_layout(self, view: TerminalView) -> RenderableType:
         header = self._build_header(view)
         if view.terminal_width >= 72:
             body = Table.grid(expand=True)
             body.add_column(ratio=3)
             body.add_column(ratio=2)
-            body.add_row(self._build_radar_panel(view), self._build_nearest_panel(view))
+            body.add_row(self._build_radar_panel(view), self._build_aircraft_panel(view))
             summary = self._build_summary(view)
             return Group(header, "", body, "", summary)
         return Group(
@@ -56,7 +61,7 @@ class TerminalRenderer:
             "",
             self._build_radar_panel(view),
             "",
-            self._build_nearest_panel(view),
+            self._build_aircraft_panel(view),
             "",
             self._build_summary(view),
         )
@@ -78,7 +83,7 @@ class TerminalRenderer:
         if view.is_stale:
             status = "STALE ●"
         header = Text()
-        header.append(f"{view.location_name}\n", style="bold")
+        header.append(f"{self._display_location(view)}\n", style="bold")
         header.append(f"{status} ", style="bold green" if view.is_live else "bold yellow")
         header.append(time_str)
         if view.aircraft_error and not view.is_live:
@@ -100,7 +105,7 @@ class TerminalRenderer:
             content = Text("\n".join(lines), justify="center")
         return Panel(content, title="RADAR", border_style="blue")
 
-    def _build_nearest_panel(self, view: TerminalView) -> Panel:
+    def _build_aircraft_panel(self, view: TerminalView) -> Panel:
         if view.snapshot is None or view.snapshot.nearest is None:
             if view.snapshot is not None and view.snapshot.count == 0:
                 text = Text(
@@ -109,24 +114,36 @@ class TerminalRenderer:
                 )
             else:
                 text = Text("No aircraft data available.", style="dim")
-            return Panel(text, title="NEAREST AIRCRAFT", border_style="green")
+            return Panel(text, title="NEARBY AIRCRAFT", border_style="green")
 
         ac = view.snapshot.nearest
-        lines = [
-            format_callsign(ac),
-            format_airline(ac),
-            format_route(ac),
-            "",
-            f"Distance: {format_distance_km(ac.distance_km)}",
-            f"Altitude: {format_altitude_ft(ac.altitude_ft)}",
-            f"Speed: {format_speed_knots(ac.ground_speed_knots)}",
-            f"Bearing: {format_bearing_deg(ac.bearing_deg)}",
-        ]
-        return Panel(Text("\n".join(lines)), title="NEAREST AIRCRAFT", border_style="green")
+        content = Text()
+        content.append("CLOSEST\n", style="bold")
+        content.append(f"{format_callsign(ac)}\n\n", style="bold cyan")
+        content.append(f"{format_airline(ac)}\n")
+        content.append(f"{format_route(ac)}\n\n")
+        content.append(_format_closest_metrics(ac))
+
+        nearby = view.snapshot.aircraft[:_NEARBY_LIST_SIZE]
+        if nearby:
+            content.append("\n\n")
+            content.append("NEARBY\n", style="bold")
+            for rank, listed in enumerate(nearby, start=1):
+                line = _format_nearby_line(rank, listed) + "\n"
+                if rank == 1:
+                    content.append(line, style="bold")
+                else:
+                    content.append(line)
+
+        return Panel(content, title="NEARBY AIRCRAFT", border_style="green")
+
+    def _build_nearest_panel(self, view: TerminalView) -> Panel:
+        """Backward-compatible alias for tests."""
+        return self._build_aircraft_panel(view)
 
     def _build_aircraft_table(self, view: TerminalView) -> str:
         table = Table(
-            title=f"TermRadar — {view.location_name}",
+            title=f"TermRadar — {self._display_location(view)}",
             box=box.SIMPLE,
             show_header=True,
             header_style="bold",
@@ -162,22 +179,57 @@ class TerminalRenderer:
 
     def _build_summary_text(self, view: TerminalView) -> str:
         count = view.aircraft_count
-        plural = "aircraft" if count != 1 else "aircraft"
+        aircraft_text = "1 aircraft nearby" if count == 1 else f"{count} aircraft nearby"
+        refresh = _format_refresh_interval(view.refresh_seconds)
         parts = [
-            f"{count} {plural} within {view.radius_km:.0f} km",
-            f"Refresh: {view.refresh_seconds} seconds",
+            aircraft_text,
+            f"radius {view.radius_km:.0f} km",
+            f"refresh {refresh}",
         ]
         if view.last_updated and (view.aircraft_error or view.is_stale):
-            parts.append(f"Last update: {format_local_time(view.last_updated, view.timezone)}")
+            parts.append(f"last update {format_local_time(view.last_updated, view.timezone)}")
         if view.aircraft_error and view.is_stale:
-            parts.append("Retrying on next refresh")
-        return " | ".join(parts)
+            parts.append("retrying on next refresh")
+        return "  •  ".join(parts)
 
     def _location_line(self, view: TerminalView) -> str:
-        return f"TERMRADAR — {view.location_name}"
+        return f"TERMRADAR — {self._display_location(view)}"
 
     def _status_line(self, view: TerminalView) -> str:
         updated = format_local_time(view.last_updated, view.timezone)
         if view.is_live:
             return f"LIVE ● {updated}"
         return f"DATA UNAVAILABLE — Last update: {updated}"
+
+
+def _format_refresh_interval(seconds: int) -> str:
+    if seconds == 1:
+        return "1s"
+    return f"{seconds}s"
+
+
+def _format_closest_metrics(ac) -> str:
+    distance = format_distance_km(ac.distance_km)
+    away = f"{distance} away" if distance != "—" else "Distance unknown"
+    altitude = format_altitude_ft(ac.altitude_ft)
+    parts = [
+        part
+        for part in (
+            away,
+            format_bearing_compass(ac.bearing_deg),
+            format_speed_knots(ac.ground_speed_knots),
+            altitude if altitude not in ("—", "ground") else None,
+        )
+        if part
+    ]
+    return " · ".join(parts)
+
+
+def _format_nearby_line(rank: int, ac) -> str:
+    callsign = format_callsign(ac)
+    distance = format_distance_km(ac.distance_km)
+    if ac.bearing_deg is None:
+        compass = "—"
+    else:
+        compass = bearing_to_compass(ac.bearing_deg)
+    return f"{rank}  {callsign:<8}  {distance:>7}  {compass}"

@@ -12,7 +12,7 @@ pip install -e ".[dev]"
 
 **Requirements:** Python 3.11+
 
-**Runtime deps:** `httpx`, `platformdirs`, `rich`, `tomli-w`
+**Runtime deps:** `httpx`, `platformdirs`, `rich`, `timezonefinder`, `tomli-w`
 
 **Dev deps:** `build`, `pytest`, `pytest-cov`, `ruff`
 
@@ -21,8 +21,12 @@ pip install -e ".[dev]"
 ```bash
 termradar
 termradar --location "Baner, Pune" --radius 25 --refresh 10
+termradar --aircraft-provider opensky    # optional; rate-limited
 termradar --reset-location
+termradar --version
 ```
+
+Refresh must be **≥ 3 seconds** (`termradar.core.limits.LIVE_REFRESH_MIN_SECONDS`).
 
 ## Test
 
@@ -32,7 +36,18 @@ pytest -v
 pytest --cov=termradar --cov-report=term-missing
 ```
 
-All tests use mocked HTTP — no network required.
+All tests use mocked HTTP — no network required for the suite.
+
+Key test areas:
+
+| Area | Tests |
+|------|-------|
+| Providers | `test_aircraft.py`, `test_adsbdb.py`, `test_routes.py`, `test_geocoding.py` |
+| Engine / enrichment | `test_engine.py`, `test_airline.py` |
+| UI / radar | `test_terminal_ui.py`, `test_radar_canvas.py`, `test_radar_coords.py` |
+| Config / limits | `test_config.py`, `test_rate_limit.py` |
+
+Use `TerminalRenderer.render_text()` for layout tests without brittle ANSI snapshots.
 
 ## Lint and format
 
@@ -48,20 +63,37 @@ ruff format --check src tests
 python -m build
 pip install dist/termradar-*.whl
 termradar --help
+termradar --version
 python -c "import termradar; print(termradar.__version__)"
 ```
 
 ## Project layout
 
 ```text
-src/termradar/    Package source
-tests/            pytest suite
-docs/             Documentation
+src/termradar/       Package source
+tests/               pytest suite (fakes in tests/fakes.py)
+docs/                Architecture, providers, roadmap
 ```
+
+## Rate-limit constants
+
+Defined in `src/termradar/core/limits.py`:
+
+```python
+LIVE_REFRESH_DEFAULT_SECONDS = 5
+LIVE_REFRESH_MIN_SECONDS = 3
+ENRICHMENT_REQUESTS_PER_MINUTE = 30
+ENRICHMENT_MAX_BURST = 10
+ENRICHMENT_SUCCESS_TTL_SECONDS = 43_200   # 12 h
+ENRICHMENT_FAILURE_TTL_SECONDS = 1_800    # 30 min
+GEOCODING_MIN_INTERVAL_SECONDS = 1.0
+```
+
+Change these in one place; `config/storage.py`, `cli.py`, and `CachedRouteProvider` import from there.
 
 ## Notes
 
 - User config: `~/.config/termradar/config.toml` — never commit
-- Test helpers: `renderers/formatting.py`, `renderers/radar_coords.py`
-- Use `TerminalRenderer.render_text()` for layout tests without brittle ANSI snapshots
 - Do not call providers from renderer code
+- Provider JSON must not leak outside `providers/`
+- ADSBDB 404 / unknown callsign is expected — handle quietly at debug level

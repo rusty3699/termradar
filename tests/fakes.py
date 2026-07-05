@@ -47,7 +47,7 @@ class FakeRouteProvider:
         self._fail = fail
         self.calls: list[str] = []
 
-    def lookup_route(self, callsign: str) -> RouteInfo | None:
+    def lookup_route(self, callsign: str, *, hex_id: str | None = None) -> RouteInfo | None:
         self.calls.append(callsign)
         if self._fail:
             raise RuntimeError("route provider down")

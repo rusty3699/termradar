@@ -16,6 +16,7 @@ class TerminalView:
     radius_km: float
     refresh_seconds: int
     timezone: str | None = None
+    location_query: str | None = None
     snapshot: RadarSnapshot | None = None
     aircraft_error: str | None = None
     last_updated: datetime | None = None

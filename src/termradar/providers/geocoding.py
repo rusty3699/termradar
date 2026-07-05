@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import logging
+import time
+from collections.abc import Callable
 from typing import Any
 from urllib.parse import urlencode
 
 import httpx
 
+from termradar.core.limits import GEOCODING_MIN_INTERVAL_SECONDS
 from termradar.core.models import LocationCandidate
 
 logger = logging.getLogger(__name__)
@@ -30,13 +33,20 @@ class NominatimGeocodingProvider:
         base_url: str = _DEFAULT_BASE_URL,
         user_agent: str = _DEFAULT_USER_AGENT,
         timeout: float = _DEFAULT_TIMEOUT,
+        min_interval_seconds: float = GEOCODING_MIN_INTERVAL_SECONDS,
         client: httpx.Client | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self._base_url = base_url
         self._user_agent = user_agent
         self._timeout = timeout
+        self._min_interval_seconds = min_interval_seconds
         self._client = client
         self._owns_client = client is None
+        self._clock = clock
+        self._sleep = sleep
+        self._last_request_at: float | None = None
 
     def search(self, query: str) -> list[LocationCandidate]:
         """Return location candidates for *query*."""
@@ -44,6 +54,7 @@ class NominatimGeocodingProvider:
         if not query:
             return []
 
+        self._wait_for_rate_limit()
         params = urlencode(
             {
                 "q": query,
@@ -85,6 +96,17 @@ class NominatimGeocodingProvider:
             if candidate is not None:
                 candidates.append(candidate)
         return candidates
+
+    def _wait_for_rate_limit(self) -> None:
+        if self._min_interval_seconds <= 0:
+            return
+        now = self._clock()
+        if self._last_request_at is not None:
+            elapsed = now - self._last_request_at
+            if elapsed < self._min_interval_seconds:
+                self._sleep(self._min_interval_seconds - elapsed)
+                now = self._clock()
+        self._last_request_at = now
 
     def close(self) -> None:
         if self._owns_client and self._client is not None:

@@ -58,7 +58,35 @@ def test_nearest_aircraft_panel():
     assert "IndiGo" in text
     assert "DEL" in text
     assert "BOM" in text
-    assert "4.2 km" in text
+    assert "4.2 km away" in text
+    assert "ENE · 72°" in text
+    assert "CLOSEST" in text
+    assert "NEARBY" in text
+    assert "1  6E221" in text or "1  6E221 " in text
+
+
+def test_nearby_list_shows_top_five():
+    aircraft = tuple(
+        Aircraft(
+            hex_id=f"ac{i}",
+            callsign=f"FLT{i}",
+            latitude=19.0 + i * 0.01,
+            longitude=72.0,
+            distance_km=4.0 + i,
+            bearing_deg=float(i * 30),
+        )
+        for i in range(6)
+    )
+    snapshot = RadarSnapshot(
+        location=Location("q", "Dadar, Mumbai", 19.0, 72.0),
+        radius_km=15.0,
+        aircraft=aircraft,
+    )
+    text = TerminalRenderer().render_text(_view(snapshot=snapshot))
+    assert "NEARBY" in text
+    assert "1  FLT0" in text
+    assert "5  FLT4" in text
+    assert "FLT5" not in text
 
 
 def test_missing_metadata_graceful():
@@ -88,6 +116,20 @@ def test_error_state():
         )
     )
     assert "unavailable" in text.lower()
+
+
+def test_footer_summary():
+    snapshot = RadarSnapshot(
+        location=Location("q", "Dadar, Mumbai", 19.0, 72.0),
+        radius_km=10.0,
+        aircraft=(),
+    )
+    text = TerminalRenderer().render_text(
+        _view(snapshot=snapshot, refresh_seconds=3, radius_km=10.0)
+    )
+    assert "0 aircraft nearby" in text
+    assert "radius 10 km" in text
+    assert "refresh 3s" in text
 
 
 def test_compact_layout_for_narrow_terminal():
