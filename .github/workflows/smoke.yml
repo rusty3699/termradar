@@ -1,0 +1,107 @@
+name: Smoke test
+
+on:
+  schedule:
+    # Daily at 09:00 IST (03:30 UTC)
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pypi-smoke:
+    name: pip install and live run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install termradar from PyPI in a fresh venv
+        run: |
+          python -m venv /tmp/termradar-smoke-venv
+          /tmp/termradar-smoke-venv/bin/pip install --upgrade pip
+          /tmp/termradar-smoke-venv/bin/pip install termradar
+
+      - name: Verify CLI entry points
+        run: |
+          /tmp/termradar-smoke-venv/bin/termradar --version
+          /tmp/termradar-smoke-venv/bin/termradar --help
+
+      - name: Validate adsb.lol aircraft API
+        run: |
+          python3 <<'PY'
+          import json
+          import sys
+          import urllib.error
+          import urllib.request
+
+          # Heathrow: 15 km → ceil(15/1.852) = 9 nm (matches TermRadar provider)
+          url = "https://api.adsb.lol/v2/point/51.47000/-0.45430/9"
+
+          try:
+              with urllib.request.urlopen(url, timeout=30) as response:
+                  status = response.status
+                  body = response.read()
+          except urllib.error.HTTPError as exc:
+              print(f"adsb.lol request failed: HTTP {exc.code}", file=sys.stderr)
+              raise SystemExit(1) from exc
+          except urllib.error.URLError as exc:
+              print(f"adsb.lol request failed: {exc.reason}", file=sys.stderr)
+              raise SystemExit(1) from exc
+
+          if status != 200:
+              print(f"adsb.lol request failed: HTTP {status}", file=sys.stderr)
+              raise SystemExit(1)
+
+          try:
+              payload = json.loads(body)
+          except json.JSONDecodeError as exc:
+              print("adsb.lol response is not valid JSON", file=sys.stderr)
+              raise SystemExit(1) from exc
+
+          if "ac" not in payload:
+              print("adsb.lol response missing 'ac' key", file=sys.stderr)
+              raise SystemExit(1)
+
+          if not isinstance(payload["ac"], list):
+              print("'ac' is not a list", file=sys.stderr)
+              raise SystemExit(1)
+
+          print(f"adsb.lol OK: ac list with {len(payload['ac'])} aircraft")
+          PY
+
+      - name: Seed config for non-interactive live run
+        run: |
+          mkdir -p "${RUNNER_TEMP}/termradar-config/termradar"
+          printf '%s\n' \
+            '[radar]' \
+            'radius_km = 15.0' \
+            'refresh_seconds = 5' \
+            '' \
+            '[location]' \
+            'query = "London Heathrow Airport"' \
+            'display_name = "London Heathrow Airport, UK"' \
+            'latitude = 51.4700' \
+            'longitude = -0.4543' \
+            'timezone = "Europe/London"' \
+            > "${RUNNER_TEMP}/termradar-config/termradar/config.toml"
+
+      - name: Run live radar briefly (runtime smoke)
+        env:
+          XDG_CONFIG_HOME: ${{ runner.temp }}/termradar-config
+        run: |
+          set +e
+          timeout --signal=INT 20s /tmp/termradar-smoke-venv/bin/termradar
+          exit_code=$?
+          set -e
+          # 124 = timeout, 130 = SIGINT — radar started; provider health is checked above
+          if [ "$exit_code" -eq 124 ] || [ "$exit_code" -eq 130 ] || [ "$exit_code" -eq 0 ]; then
+            echo "Live radar smoke run completed (exit $exit_code)"
+            exit 0
+          fi
+          echo "Unexpected exit code: $exit_code"
+          exit "$exit_code"
