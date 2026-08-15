@@ -1,5 +1,10 @@
 # TermRadar
 
+[![PyPI version](https://img.shields.io/pypi/v/termradar)](https://pypi.org/project/termradar/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/termradar)](https://pypi.org/project/termradar/)
+[![Python](https://img.shields.io/pypi/pyversions/termradar)](https://pypi.org/project/termradar/)
+[![License](https://img.shields.io/pypi/l/termradar)](LICENSE)
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/rusty3699/termradar/main/docs/assets/termradar.png" alt="TermRadar live radar over Andheri, Mumbai" width="900"/>
 </p>
